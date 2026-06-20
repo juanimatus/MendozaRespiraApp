@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, CircleMarker, useMap } from 'react-leaflet';
+import { AnimatePresence } from 'motion/react';
 import 'leaflet/dist/leaflet.css';
 
 import { fetchReports } from '@/lib/reports';
@@ -97,13 +98,16 @@ export default function MapView() {
       </div>
 
       {/* Modal de detalle */}
-      {selected && (
-        <ReportDetailModal
-          report={selected}
-          onClose={() => setSelected(null)}
-          onVerified={loadReports}
-        />
-      )}
+      <AnimatePresence>
+        {selected && (
+          <ReportDetailModal
+            key={selected.id}
+            report={selected}
+            onClose={() => setSelected(null)}
+            onVerified={loadReports}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

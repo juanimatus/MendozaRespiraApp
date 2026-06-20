@@ -1,8 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { TreeDeciduous, Plus, Info } from 'lucide-react';
+import { motion } from 'motion/react';
+import { TreeDeciduous, Plus, Menu } from 'lucide-react';
+
+import SideMenu from '@/components/layout/SideMenu';
 
 // Leaflet no funciona en SSR → carga dinámica
 const MapView = dynamic(() => import('@/components/map/MapView'), {
@@ -17,43 +21,54 @@ const MapView = dynamic(() => import('@/components/map/MapView'), {
   ),
 });
 
+const EASE = [0.4, 0, 0.2, 1] as const;
+
 export default function MapPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 bg-stone-950 border-b border-stone-800 z-10 shrink-0">
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="p-1.5 -ml-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800
+                       transition-colors duration-150"
+            aria-label="Abrir menú"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <TreeDeciduous className="w-5 h-5 text-green-500" />
           <span className="font-semibold text-stone-100 tracking-tight">Mendoza Respira</span>
         </div>
-        <div className="flex items-center gap-2">
-          <a
-            href="https://github.com/tu-org/mendoza-respira"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 rounded-lg text-stone-400 hover:text-stone-200 hover:bg-stone-800 transition-colors"
-            title="Acerca del proyecto"
-          >
-            <Info className="w-4 h-4" />
-          </a>
-        </div>
       </header>
+
+      <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       {/* Mapa — ocupa todo el espacio restante */}
       <main className="flex-1 relative overflow-hidden">
         <MapView />
 
         {/* FAB: Crear reporte */}
-        <Link
-          href="/reportar"
-          className="absolute bottom-6 right-4 z-[1000] flex items-center gap-2
-                     bg-green-700 hover:bg-green-600 active:scale-95
-                     text-white font-semibold px-5 py-3 rounded-2xl shadow-lg shadow-black/40
-                     transition-all duration-150"
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.2, delay: 0.1, ease: EASE }}
+          whileTap={{ scale: 0.96 }}
+          className="absolute bottom-6 right-4 z-[1000]"
         >
-          <Plus className="w-5 h-5" />
-          <span>Reportar tocón</span>
-        </Link>
+          <Link
+            href="/reportar"
+            className="flex items-center gap-2
+                       bg-green-700 hover:bg-green-600
+                       text-white font-semibold px-5 py-3 rounded-2xl shadow-lg shadow-black/40
+                       transition-colors duration-150"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Reportar tocón</span>
+          </Link>
+        </motion.div>
       </main>
 
       {/* Leyenda */}

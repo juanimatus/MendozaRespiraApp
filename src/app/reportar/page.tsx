@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'motion/react';
 import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle } from 'lucide-react';
 
 import { createReport } from '@/lib/reports';
@@ -10,8 +11,18 @@ import type { ReportType } from '@/types';
 import { REPORT_TYPE_LABELS } from '@/types';
 
 const TYPES: ReportType[] = ['tocon', 'arbol_talado', 'sospecha'];
+const EASE = [0.4, 0, 0.2, 1] as const;
 
 type Step = 'form' | 'submitting' | 'success';
+
+// Variants para el stagger de secciones del formulario
+const sectionVariants = {
+  hidden:  { opacity: 0, y: 10 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.2, delay: 0.04 * i, ease: EASE },
+  }),
+};
 
 export default function ReportarPage() {
   const router = useRouter();
@@ -83,23 +94,38 @@ export default function ReportarPage() {
   if (step === 'success') {
     return (
       <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center px-6 text-center gap-6">
-        <div className="w-16 h-16 rounded-full bg-green-900/50 flex items-center justify-center">
+        <motion.div
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.25, ease: EASE }}
+          className="w-16 h-16 rounded-full bg-green-900/50 flex items-center justify-center"
+        >
           <CheckCircle className="w-9 h-9 text-green-400" />
-        </div>
-        <div className="space-y-2">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, delay: 0.08, ease: EASE }}
+          className="space-y-2"
+        >
           <h1 className="text-2xl font-bold text-stone-100">¡Reporte enviado!</h1>
           <p className="text-stone-400 text-sm max-w-xs">
             Tu reporte ya es parte del mapa ciudadano. Gracias por contribuir.
           </p>
-        </div>
-        <div className="flex flex-col gap-3 w-full max-w-xs">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, delay: 0.14, ease: EASE }}
+          className="flex flex-col gap-3 w-full max-w-xs"
+        >
           <button onClick={() => router.push('/mapa')} className="btn-primary">
             Ver en el mapa
           </button>
           <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); }} className="btn-secondary">
             Crear otro reporte
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -111,7 +137,7 @@ export default function ReportarPage() {
       <header className="flex items-center gap-3 px-4 py-4 border-b border-stone-800 shrink-0">
         <button
           onClick={() => router.back()}
-          className="p-2 rounded-lg text-stone-400 hover:text-stone-200 hover:bg-stone-800 transition-colors"
+          className="p-2 rounded-lg text-stone-400 hover:text-stone-200 hover:bg-stone-800 transition-colors duration-150"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -121,36 +147,58 @@ export default function ReportarPage() {
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-6 pb-8">
 
         {/* ── 1. Foto ────────────────────────────────────────────────── */}
-        <section className="space-y-2">
+        <motion.section
+          custom={0}
+          initial="hidden"
+          animate="visible"
+          variants={sectionVariants}
+          className="space-y-2"
+        >
           <label className="text-sm font-medium text-stone-300">
             Foto <span className="text-red-400">*</span>
           </label>
 
-          {photoPreview ? (
-            <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-stone-900">
-              <Image src={photoPreview} alt="Preview" fill className="object-cover" />
-              <button
-                type="button"
-                onClick={() => { setPhoto(null); setPreview(null); if (fileRef.current) fileRef.current.value = ''; }}
-                className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2.5 py-1 rounded-lg"
+          <AnimatePresence mode="wait">
+            {photoPreview ? (
+              <motion.div
+                key="preview"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.15, ease: EASE }}
+                className="relative w-full aspect-video rounded-2xl overflow-hidden bg-stone-900"
               >
-                Cambiar
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="w-full aspect-video rounded-2xl border-2 border-dashed border-stone-700
-                         flex flex-col items-center justify-center gap-3
-                         text-stone-500 hover:border-green-700 hover:text-green-500
-                         transition-colors bg-stone-900/50"
-            >
-              <Camera className="w-8 h-8" />
-              <span className="text-sm font-medium">Tocar para agregar foto</span>
-              <span className="text-xs text-stone-600">JPG, PNG, HEIC · Máx 10 MB</span>
-            </button>
-          )}
+                <Image src={photoPreview} alt="Preview" fill className="object-cover" />
+                <button
+                  type="button"
+                  onClick={() => { setPhoto(null); setPreview(null); if (fileRef.current) fileRef.current.value = ''; }}
+                  className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2.5 py-1 rounded-lg"
+                >
+                  Cambiar
+                </button>
+              </motion.div>
+            ) : (
+              <motion.button
+                key="dropzone"
+                type="button"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.15, ease: EASE }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => fileRef.current?.click()}
+                className="w-full aspect-video rounded-2xl border-2 border-dashed border-stone-700
+                           flex flex-col items-center justify-center gap-3
+                           text-stone-500 hover:border-green-700 hover:text-green-500
+                           hover:bg-stone-900/80
+                           transition-colors duration-150 bg-stone-900/50"
+              >
+                <Camera className="w-8 h-8" />
+                <span className="text-sm font-medium">Tocar para agregar foto</span>
+                <span className="text-xs text-stone-600">JPG, PNG, HEIC · Máx 10 MB</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           <input
             ref={fileRef}
@@ -160,79 +208,118 @@ export default function ReportarPage() {
             onChange={handlePhotoChange}
             className="hidden"
           />
-        </section>
+        </motion.section>
 
         {/* ── 2. Tipo ────────────────────────────────────────────────── */}
-        <section className="space-y-2">
+        <motion.section
+          custom={1}
+          initial="hidden"
+          animate="visible"
+          variants={sectionVariants}
+          className="space-y-2"
+        >
           <label className="text-sm font-medium text-stone-300">
             Tipo de reporte <span className="text-red-400">*</span>
           </label>
           <div className="grid grid-cols-3 gap-2">
             {TYPES.map((t) => (
-              <button
+              <motion.button
                 key={t}
                 type="button"
+                whileTap={{ scale: 0.96 }}
                 onClick={() => setType(t)}
-                className={`py-2.5 px-2 rounded-xl text-xs font-semibold border transition-all
+                className={`py-2.5 px-2 rounded-xl text-xs font-semibold border transition-colors duration-150
                   ${type === t
                     ? 'bg-green-800 border-green-600 text-white'
                     : 'bg-stone-900 border-stone-700 text-stone-400 hover:border-stone-500'
                   }`}
               >
                 {REPORT_TYPE_LABELS[t]}
-              </button>
+              </motion.button>
             ))}
           </div>
-        </section>
+        </motion.section>
 
         {/* ── 3. Ubicación ──────────────────────────────────────────── */}
-        <section className="space-y-2">
+        <motion.section
+          custom={2}
+          initial="hidden"
+          animate="visible"
+          variants={sectionVariants}
+          className="space-y-2"
+        >
           <label className="text-sm font-medium text-stone-300">
             Ubicación GPS <span className="text-red-400">*</span>
           </label>
 
-          {location ? (
-            <div className="flex items-center gap-3 bg-green-900/30 border border-green-800/50
-                            rounded-xl px-4 py-3">
-              <MapPin className="w-4 h-4 text-green-400 shrink-0" />
-              <div className="text-sm">
-                <p className="text-green-300 font-medium">Ubicación capturada</p>
-                <p className="text-green-600 font-mono text-xs mt-0.5">
-                  {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={getLocation}
-                className="ml-auto text-xs text-green-500 hover:text-green-300"
+          <AnimatePresence mode="wait">
+            {location ? (
+              <motion.div
+                key="located"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.15, ease: EASE }}
+                className="flex items-center gap-3 bg-green-900/30 border border-green-800/50
+                          rounded-xl px-4 py-3"
               >
-                Actualizar
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={getLocation}
-              className="w-full flex items-center justify-center gap-2
-                         bg-stone-900 border border-stone-700 hover:border-green-700
-                         text-stone-300 hover:text-green-400
-                         rounded-xl py-3 text-sm font-medium transition-colors"
-            >
-              <MapPin className="w-4 h-4" />
-              Capturar mi ubicación
-            </button>
-          )}
+                <MapPin className="w-4 h-4 text-green-400 shrink-0" />
+                <div className="text-sm">
+                  <p className="text-green-300 font-medium">Ubicación capturada</p>
+                  <p className="text-green-600 font-mono text-xs mt-0.5">
+                    {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={getLocation}
+                  className="ml-auto text-xs text-green-500 hover:text-green-300"
+                >
+                  Actualizar
+                </button>
+              </motion.div>
+            ) : (
+              <motion.button
+                key="locate"
+                type="button"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.15, ease: EASE }}
+                whileTap={{ scale: 0.98 }}
+                onClick={getLocation}
+                className="w-full flex items-center justify-center gap-2
+                           bg-stone-900 border border-stone-700 hover:border-green-700
+                           text-stone-300 hover:text-green-400
+                           rounded-xl py-3 text-sm font-medium transition-colors duration-150"
+              >
+                <MapPin className="w-4 h-4" />
+                Capturar mi ubicación
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {locError && (
-            <p className="text-xs text-red-400 bg-red-900/20 border border-red-800/40
-                          rounded-lg px-3 py-2">
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={{ duration: 0.15, ease: EASE }}
+              className="text-xs text-red-400 bg-red-900/20 border border-red-800/40
+                        rounded-lg px-3 py-2"
+            >
               {locError}
-            </p>
+            </motion.p>
           )}
-        </section>
+        </motion.section>
 
         {/* ── 4. Comentario ─────────────────────────────────────────── */}
-        <section className="space-y-2">
+        <motion.section
+          custom={3}
+          initial="hidden"
+          animate="visible"
+          variants={sectionVariants}
+          className="space-y-2"
+        >
           <label className="text-sm font-medium text-stone-300">
             Comentario <span className="text-stone-600 font-normal">(opcional)</span>
           </label>
@@ -245,25 +332,28 @@ export default function ReportarPage() {
             className="form-input resize-none"
           />
           <p className="text-right text-xs text-stone-600">{comment.length}/500</p>
-        </section>
+        </motion.section>
 
         {/* ── Enviar ────────────────────────────────────────────────── */}
-        <button
-          type="submit"
-          disabled={!canSubmit || isSubmitting}
-          className="btn-primary w-full flex items-center justify-center gap-2"
-        >
-          {isSubmitting
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando…</>
-            : 'Enviar reporte'
-          }
-        </button>
+        <motion.div custom={4} initial="hidden" animate="visible" variants={sectionVariants}>
+          <motion.button
+            type="submit"
+            disabled={!canSubmit || isSubmitting}
+            whileTap={canSubmit ? { scale: 0.98 } : undefined}
+            className="btn-primary w-full flex items-center justify-center gap-2"
+          >
+            {isSubmitting
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando…</>
+              : 'Enviar reporte'
+            }
+          </motion.button>
 
-        {!photo && (
-          <p className="text-center text-xs text-stone-600">
-            Se requiere foto y ubicación para enviar.
-          </p>
-        )}
+          {!photo && (
+            <p className="text-center text-xs text-stone-600 mt-3">
+              Se requiere foto y ubicación para enviar.
+            </p>
+          )}
+        </motion.div>
       </form>
     </div>
   );
