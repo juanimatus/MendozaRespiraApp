@@ -76,7 +76,8 @@ export default function ReportarPage() {
     }
   }
 
-  const canSubmit = !!photo && !!location && step === 'form';
+  const isSubmitting = step === 'submitting';
+  const canSubmit = !!photo && !!location && !isSubmitting;
 
   // ── Pantalla de éxito ────────────────────────────────────────────────
   if (step === 'success') {
@@ -249,10 +250,10 @@ export default function ReportarPage() {
         {/* ── Enviar ────────────────────────────────────────────────── */}
         <button
           type="submit"
-          disabled={!canSubmit || step === 'submitting'}
+          disabled={!canSubmit || isSubmitting}
           className="btn-primary w-full flex items-center justify-center gap-2"
         >
-          {step === 'submitting'
+          {isSubmitting
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando…</>
             : 'Enviar reporte'
           }

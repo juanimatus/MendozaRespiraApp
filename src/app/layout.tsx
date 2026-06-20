@@ -1,20 +1,26 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+// Usamos la pila de fuentes del sistema en vez de next/font/google:
+// evita una dependencia de red en build time (fonts.googleapis.com),
+// lo que hace el build más robusto en cualquier entorno de CI/CD.
 
 export const metadata: Metadata = {
   title: 'Mendoza Respira',
   description: 'Mapa ciudadano de tocones y árboles talados en Mendoza',
   manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
   themeColor: '#1f4a26',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={inter.variable}>
+    <html lang="es">
       <body className="bg-stone-950 text-stone-100 font-sans antialiased">
         {children}
       </body>
