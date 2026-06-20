@@ -56,7 +56,8 @@ export default function MapPage() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.1, ease: EASE }}
           whileTap={{ scale: 0.96 }}
-          className="absolute bottom-6 right-4 z-[1000]"
+          className="absolute right-4 z-[1000]"
+          style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
         >
           <Link
             href="/reportar"
