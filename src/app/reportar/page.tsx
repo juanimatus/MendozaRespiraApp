@@ -187,7 +187,7 @@ export default function ReportarPage() {
                 transition={{ duration: 0.15, ease: EASE }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => fileRef.current?.click()}
-                className="w-full aspect-video rounded-2xl border-2 border-dashed border-stone-700
+                className="w-full py-10 rounded-2xl border-2 border-dashed border-stone-700
                            flex flex-col items-center justify-center gap-3
                            text-stone-500 hover:border-green-700 hover:text-green-500
                            hover:bg-stone-900/80

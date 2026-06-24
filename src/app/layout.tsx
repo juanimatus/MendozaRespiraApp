@@ -1,13 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-
-// Usamos la pila de fuentes del sistema en vez de next/font/google:
-// evita una dependencia de red en build time (fonts.googleapis.com),
-// lo que hace el build más robusto en cualquier entorno de CI/CD.
+import { RoleProvider } from '@/lib/role-context';
 
 export const metadata: Metadata = {
-  title: 'Mendoza Respira',
-  description: 'Mapa ciudadano de tocones y árboles talados en Mendoza',
+  title: 'Mendoza Respira AI',
+  description: 'Plataforma GovTech para gestión inteligente del arbolado urbano en Mendoza',
   manifest: '/manifest.json',
 };
 
@@ -23,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body className="bg-stone-950 text-stone-100 font-sans antialiased">
-        {children}
+        <RoleProvider>
+          {children}
+        </RoleProvider>
       </body>
     </html>
   );
