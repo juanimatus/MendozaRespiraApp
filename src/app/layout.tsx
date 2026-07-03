@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
+// @ts-ignore: allows importing global CSS without type declarations
 import './globals.css';
 import { RoleProvider } from '@/lib/role-context';
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: 'Mendoza Respira AI',
@@ -23,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <RoleProvider>
           {children}
         </RoleProvider>
+        <Analytics />
       </body>
     </html>
   );
