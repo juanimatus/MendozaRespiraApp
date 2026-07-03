@@ -8,7 +8,7 @@ import { ChevronLeft, TreeDeciduous, Camera, MapPin, Users } from 'lucide-react'
 const EASE = [0.4, 0, 0.2, 1] as const;
 
 const STEPS = [
-  { icon: Camera,  title: 'Sacá una foto',       text: 'Del tocón, árbol talado o sospecha de tala.' },
+  { icon: Camera,  title: 'Sacá una foto',       text: 'Del tocón, árbol talado o sospecha de caída.' },
   { icon: MapPin,  title: 'Capturá tu ubicación', text: 'El GPS de tu celular marca el punto exacto.' },
   { icon: Users,   title: 'La comunidad valida',  text: 'Otros vecinos pueden confirmar que el reporte existe.' },
 ];
