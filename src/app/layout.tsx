@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 // @ts-ignore: allows importing global CSS without type declarations
 import './globals.css';
-import { RoleProvider } from '@/lib/role-context';
+import { AuthProvider } from '@/lib/auth-context';
 import { Analytics } from "@vercel/analytics/next"
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
@@ -35,9 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body className="bg-stone-950 text-stone-100 font-sans antialiased">
-        <RoleProvider>
+        <AuthProvider>
           {children}
-        </RoleProvider>
+        </AuthProvider>
         <ServiceWorkerRegister />
         <Analytics />
       </body>
