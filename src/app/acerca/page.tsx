@@ -18,7 +18,8 @@ export default function AcercaPage() {
 
   return (
     <div className="min-h-screen bg-stone-950">
-      <header className="flex items-center gap-3 px-4 py-4 border-b border-stone-800">
+      <header className="flex items-center gap-3 px-4 py-4 border-b border-stone-800"
+        style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}>
         <button
           onClick={() => router.back()}
           className="p-2 rounded-lg text-stone-400 hover:text-stone-200 hover:bg-stone-800 transition-colors duration-150"

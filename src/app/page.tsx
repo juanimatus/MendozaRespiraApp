@@ -44,7 +44,8 @@ export default function Home() {
         </div>
       </motion.div>
 
-      <p className="absolute bottom-6 text-xs text-stone-600">
+      <p className="absolute bottom-6 text-xs text-stone-600"
+        style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
         Proyecto civic tech · sin registro necesario
       </p>
     </main>

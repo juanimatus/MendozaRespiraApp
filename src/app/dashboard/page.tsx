@@ -52,7 +52,8 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-stone-950">
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <header className="flex items-center gap-3 px-4 py-4 border-b border-stone-800 sticky top-0 bg-stone-950 z-10">
+      <header className="flex items-center gap-3 px-4 py-4 border-b border-stone-800 sticky top-0 bg-stone-950 z-10"
+        style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}>
         <button onClick={() => setMenuOpen(true)} className="p-1.5 -ml-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800 transition-colors">
           <Menu className="w-5 h-5" />
         </button>

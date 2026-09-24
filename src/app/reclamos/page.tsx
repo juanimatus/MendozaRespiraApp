@@ -41,7 +41,8 @@ export default function ReclamosPage() {
   return (
     <div className="min-h-screen bg-stone-950 flex flex-col">
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <header className="flex items-center gap-3 px-4 py-4 border-b border-stone-800 sticky top-0 bg-stone-950 z-10">
+      <header className="flex items-center gap-3 px-4 py-4 border-b border-stone-800 sticky top-0 bg-stone-950 z-10"
+        style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}>
         <button onClick={() => setMenuOpen(true)} className="p-1.5 -ml-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800 transition-colors">
           <Menu className="w-5 h-5" />
         </button>
@@ -111,6 +112,7 @@ export default function ReclamosPage() {
             <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
               transition={{ duration: 0.2, ease: EASE }}
               className="w-full bg-stone-950 border-t border-stone-800 rounded-t-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto"
+              style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
               onClick={e => e.stopPropagation()}>
               <h2 className="text-base font-bold text-stone-100">Detalle del reclamo</h2>
               <div className="bg-stone-900 rounded-xl p-4 space-y-1">

@@ -52,7 +52,8 @@ export default function SideMenu({ open, onClose }: Props) {
                        bg-stone-950 border-r border-stone-800 flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-stone-800">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-stone-800"
+              style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}>
               <div className="flex items-center gap-2">
                 <TreeDeciduous className="w-5 h-5 text-green-500" />
                 <span className="font-semibold text-stone-100 text-sm">Mendoza Respira AI</span>
@@ -143,7 +144,8 @@ export default function SideMenu({ open, onClose }: Props) {
               })}
             </ul>
 
-            <div className="px-5 py-4 border-t border-stone-800">
+            <div className="px-5 py-4 border-t border-stone-800"
+              style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
               <p className="text-xs text-stone-600">Civic tech · Mendoza, Argentina · MVP v0.1</p>
             </div>
           </motion.nav>

@@ -29,7 +29,8 @@ export default function MapPage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-stone-950 border-b border-stone-800 z-10 shrink-0">
+      <header className="flex items-center justify-between px-4 py-3 bg-stone-950 border-b border-stone-800 z-10 shrink-0"
+        style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setMenuOpen(true)}
@@ -73,7 +74,8 @@ export default function MapPage() {
       </main>
 
       {/* Leyenda */}
-      <footer className="flex items-center gap-4 px-4 py-2 bg-stone-950 border-t border-stone-800 text-xs text-stone-500 shrink-0">
+      <footer className="flex items-center gap-4 px-4 py-2 bg-stone-950 border-t border-stone-800 text-xs text-stone-500 shrink-0"
+        style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /> Tocón
         </span>
