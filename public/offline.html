@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Sin conexión — Mendoza Respira AI</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #0c0a09;
+      color: #e7e5e4;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .wrap {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem;
+      padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+      text-align: center;
+    }
+    img { width: 64px; height: 64px; border-radius: 16px; }
+    h1 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    p { font-size: 0.9rem; color: #a8a29e; margin: 0; max-width: 28ch; }
+    button {
+      margin-top: 0.5rem;
+      background: #15803d;
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+    }
+    button:active { background: #166534; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img src="/icons/icon-192.png" alt="" />
+    <h1>Sin conexión</h1>
+    <p>No pudimos cargar Mendoza Respira. Revisá tu conexión y volvé a intentar.</p>
+    <button onclick="location.reload()">Reintentar</button>
+  </div>
+</body>
+</html>
