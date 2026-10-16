@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import { X, CheckCircle, Clock, Users, BadgeCheck } from 'lucide-react';
 
-import { verifyReport, hasVerified } from '@/lib/reports';
+import { verifyReport, hasVerified, isRateLimited, RATE_LIMIT_MESSAGE } from '@/lib/reports';
 import type { ReportWithVerifications } from '@/types';
 import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, STATUS_LABELS, RISK_LABELS, RISK_COLORS } from '@/types';
 
@@ -28,6 +28,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
   const [alreadyVerified, setAlreadyVerified] = useState(false);
   const [verifying, setVerifying]             = useState(false);
   const [count, setCount]                     = useState(report.verification_count);
+  const [verifyError, setVerifyError]         = useState<string | null>(null);
 
   useEffect(() => {
     hasVerified(report.id).then(setAlreadyVerified);
@@ -43,6 +44,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
   async function handleVerify() {
     if (alreadyVerified || verifying) return;
     setVerifying(true);
+    setVerifyError(null);
     try {
       await verifyReport(report.id);
       setAlreadyVerified(true);
@@ -50,6 +52,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
       onVerified();
     } catch (err) {
       console.error(err);
+      setVerifyError(isRateLimited(err) ? RATE_LIMIT_MESSAGE : 'No se pudo confirmar. Probá de nuevo.');
     } finally {
       setVerifying(false);
     }
@@ -212,6 +215,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             }
             {alreadyVerified ? 'Ya lo confirmaste' : 'Confirmo que existe'}
           </motion.button>
+          {verifyError && <p className="text-xs text-red-400 text-center">{verifyError}</p>}
         </div>
       </motion.div>
     </motion.div>

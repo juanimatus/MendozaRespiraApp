@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, BadgeCheck, MapPin, Sparkles, Loader2, ExternalLink, Inbox } from 'lucide-react';
+import { Menu, BadgeCheck, MapPin, Sparkles, Loader2, ExternalLink, Inbox, EyeOff } from 'lucide-react';
 
 import SideMenu from '@/components/layout/SideMenu';
-import { fetchReviewQueue, submitReview } from '@/lib/review';
+import { fetchReviewQueue, submitReview, hideReport } from '@/lib/review';
 import type { ReportWithVerifications, RiskLevel } from '@/types';
 import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, RISK_LABELS, RISK_COLORS } from '@/types';
 
@@ -28,6 +28,8 @@ function ReviewCard({ report, onDone }: { report: ReportWithVerifications; onDon
   const [note, setNote]     = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState<string | null>(null);
+  const [discarding, setDiscarding] = useState(false);
+  const [reason, setReason] = useState('');
   const recommendation = aiRecommendation(report);
 
   async function save() {
@@ -40,6 +42,19 @@ function ReviewCard({ report, onDone }: { report: ReportWithVerifications; onDon
     } catch (err) {
       console.error(err);
       setError('No se pudo guardar. Revisá que tu usuario sea inspector o admin.');
+      setSaving(false);
+    }
+  }
+
+  async function discard() {
+    setSaving(true);
+    setError(null);
+    try {
+      await hideReport(report.id, reason);
+      onDone(report.id);
+    } catch (err) {
+      console.error(err);
+      setError('No se pudo descartar. ¿Corriste la migración 007 en Supabase?');
       setSaving(false);
     }
   }
@@ -114,6 +129,32 @@ function ReviewCard({ report, onDone }: { report: ReportWithVerifications; onDon
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <BadgeCheck className="w-4 h-4" />}
               Confirmar revisión
             </button>
+
+            {discarding ? (
+              <div className="space-y-2 rounded-xl border border-red-900/60 bg-red-950/20 p-3">
+                <p className="text-xs text-stone-400">
+                  El reporte deja de verse en el mapa y en las estadísticas, pero queda guardado.
+                </p>
+                <input value={reason} onChange={e => setReason(e.target.value)} maxLength={200}
+                  placeholder="Motivo (ej. foto con personas, duplicado, no es arbolado)"
+                  className="form-input text-sm" />
+                <div className="flex gap-2">
+                  <button onClick={() => setDiscarding(false)} disabled={saving}
+                    className="flex-1 py-2 rounded-lg text-sm text-stone-400 border border-stone-700 hover:border-stone-500">
+                    Cancelar
+                  </button>
+                  <button onClick={discard} disabled={saving}
+                    className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-red-700 hover:bg-red-600 disabled:opacity-50">
+                    Descartar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setDiscarding(true)} disabled={saving}
+                className="w-full flex items-center justify-center gap-1.5 text-xs text-stone-500 hover:text-red-400 transition-colors">
+                <EyeOff className="w-3.5 h-3.5" /> Descartar reporte (spam, duplicado o foto inapropiada)
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -162,7 +203,7 @@ export default function RevisionPage() {
           <p className="text-xs text-stone-500">El riesgo que confirmes reemplaza al de la IA</p>
         </div>
         {doneCount > 0 && (
-          <span className="ml-auto text-xs text-sky-300">{doneCount} confirmado{doneCount === 1 ? '' : 's'}</span>
+          <span className="ml-auto text-xs text-sky-300">{doneCount} resuelto{doneCount === 1 ? '' : 's'}</span>
         )}
       </header>
 

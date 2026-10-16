@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle, Sparkles } from 'lucide-react';
 
-import { createReport } from '@/lib/reports';
+import { createReport, isRateLimited, RATE_LIMIT_MESSAGE } from '@/lib/reports';
 import type { ReportType } from '@/types';
 import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, RISK_LABELS, RISK_COLORS } from '@/types';
 import { downscaleImage, fileToBase64 } from '@/lib/image';
@@ -147,7 +147,7 @@ export default function ReportarPage() {
     } catch (err) {
       console.error(err);
       setStep('form');
-      alert('Error al enviar el reporte. Revisá tu conexión e intentá de nuevo.');
+      alert(isRateLimited(err) ? RATE_LIMIT_MESSAGE : 'Error al enviar el reporte. Revisá tu conexión e intentá de nuevo.');
     }
   }
 

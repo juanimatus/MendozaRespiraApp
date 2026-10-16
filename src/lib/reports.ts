@@ -77,6 +77,15 @@ export async function createReport(input: CreateReportInput): Promise<string> {
   return data.id as string;
 }
 
+// ── Límite de envíos (migración 007) ─────────────────────────────────────
+// La base corta con hint 'rate_limit' si una misma IP manda demasiados envíos seguidos
+export const RATE_LIMIT_MESSAGE = 'Demasiados envíos seguidos. Probá de nuevo en un rato.';
+
+export function isRateLimited(err: unknown): boolean {
+  const e = err as { hint?: string; message?: string } | null;
+  return e?.hint === 'rate_limit' || !!e?.message?.includes('Demasiados envíos');
+}
+
 // ── Verificar un reporte ──────────────────────────────────────────────────
 export async function verifyReport(reportId: string): Promise<void> {
   const deviceId = getDeviceId();

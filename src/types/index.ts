@@ -28,6 +28,8 @@ export interface Report {
   review_risk?: RiskLevel | null;
   review_note?: string | null;
   reviewed_at?: string | null;
+  hidden?: boolean;
+  hidden_reason?: string | null;
 }
 
 export interface ReportWithVerifications extends Report {

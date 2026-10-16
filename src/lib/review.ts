@@ -28,3 +28,14 @@ export async function submitReview(reportId: string, risk: RiskLevel, note: stri
   });
   if (error) throw error;
 }
+
+// Descarta un reporte (foto inapropiada, duplicado, spam): deja de verse en el mapa y
+// en las estadísticas, pero queda guardado. Requiere migración 007.
+export async function hideReport(reportId: string, reason: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.rpc('hide_report', {
+    p_report: reportId,
+    p_reason: reason.trim() || null,
+  });
+  if (error) throw error;
+}
