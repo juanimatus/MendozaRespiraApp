@@ -161,6 +161,13 @@ Abrir app (rol: ciudadano)
                      5. Enviar → aparece en el mapa
 ```
 
+## Automatizaciones (n8n / Make)
+
+Cada reporte o reclamo nuevo puede disparar un webhook hacia n8n o Make para avisar al
+municipio, registrar en una planilla o mandar resúmenes. Se activa con
+`supabase/migrations/002-webhook-nuevos-reportes.sql`; el paso a paso está en
+[`docs/automatizaciones.md`](docs/automatizaciones.md).
+
 ## Flujo municipal (rol inspector / admin)
 
 ```
