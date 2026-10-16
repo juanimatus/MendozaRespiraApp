@@ -7,7 +7,7 @@ import { TreeDeciduous, MapPin, Clock, CheckCircle, Filter, ChevronDown, Menu } 
 import { createClient } from '@/lib/supabase-browser';
 import type { ReportWithVerifications } from '@/types';
 import type { Claim } from '@/types/trees';
-import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS } from '@/types';
+import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, RISK_LABELS, RISK_COLORS } from '@/types';
 import { URGENCY_LABELS, URGENCY_COLORS, CLAIM_STATUS_LABELS } from '@/types/trees';
 import SideMenu from '@/components/layout/SideMenu';
 import { MUNICIPIOS as DEPARTAMENTOS, ZONAS } from '@/lib/municipios';
@@ -49,12 +49,21 @@ function ReportCard({ item }: { item: ReportWithVerifications & { _kind: 'report
       )}
       <div className="p-4 space-y-2">
         <div className="flex items-start justify-between gap-2">
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
-            style={{ backgroundColor: color }}>
-            {REPORT_TYPE_LABELS[item.type]}
-          </span>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+              style={{ backgroundColor: color }}>
+              {REPORT_TYPE_LABELS[item.type]}
+            </span>
+            {item.ai_risk && item.ai_risk !== 'ninguna' && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+                style={{ backgroundColor: RISK_COLORS[item.ai_risk] }}>
+                {RISK_LABELS[item.ai_risk]}
+              </span>
+            )}
+          </div>
           <span className="text-xs text-stone-500">{formatDate(item.created_at)}</span>
         </div>
+        {item.ai_summary && <p className="text-sm text-stone-400">{item.ai_summary}</p>}
         {item.comment && <p className="text-sm text-stone-300">{item.comment}</p>}
         <div className="flex items-center justify-between text-xs text-stone-500 pt-1">
           <span className="flex items-center gap-1">

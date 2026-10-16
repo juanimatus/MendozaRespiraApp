@@ -3,6 +3,7 @@
 // ============================================================
 
 import type { ReportWithVerifications, ReportType } from '@/types';
+import { REPORT_TYPE_LABELS } from '@/types';
 import { ZONAS } from './municipios';
 
 export interface Count { label: string; value: number }
@@ -13,6 +14,7 @@ export interface ImpactStats {
   confirmations:  number;
   reporters:      number;   // dispositivos distintos (anónimos)
   municipios:     number;   // departamentos con al menos un reporte
+  highRisk:       number;   // riesgo alto o crítico según la IA
   firstReportAt:  string | null;
   byZona:         Count[];
   byMunicipio:    Count[];
@@ -35,7 +37,9 @@ function tally(values: string[]): Count[] {
 }
 
 export function computeImpact(reports: ReportWithVerifications[], now = new Date()): ImpactStats {
-  const byType: Record<ReportType, number> = { tocon: 0, arbol_talado: 0, sospecha: 0 };
+  const byType = Object.fromEntries(
+    Object.keys(REPORT_TYPE_LABELS).map(t => [t, 0]),
+  ) as Record<ReportType, number>;
   reports.forEach(r => { byType[r.type] = (byType[r.type] ?? 0) + 1; });
 
   const months: Count[] = [];
@@ -58,6 +62,7 @@ export function computeImpact(reports: ReportWithVerifications[], now = new Date
     confirmations: reports.reduce((s, r) => s + (r.verification_count ?? 0), 0),
     reporters:     new Set(reports.map(r => r.reporter_id).filter(Boolean)).size,
     municipios:    new Set(withMunicipio).size,
+    highRisk:      reports.filter(r => r.ai_risk === 'alta' || r.ai_risk === 'critica').length,
     firstReportAt: dates[0] ?? null,
     byZona:        tally(reports.map(r => zonaOf(r.municipio))),
     byMunicipio:   tally(withMunicipio),
@@ -69,7 +74,7 @@ export function computeImpact(reports: ReportWithVerifications[], now = new Date
 // ── Datos abiertos ────────────────────────────────────────────────────────
 // No se exporta reporter_id: es un identificador de dispositivo.
 const EXPORT_FIELDS = [
-  'id', 'created_at', 'type', 'status', 'municipio', 'address',
+  'id', 'created_at', 'type', 'status', 'municipio', 'address', 'ai_risk', 'ai_summary',
   'comment', 'photo_url', 'verification_count',
 ] as const;
 

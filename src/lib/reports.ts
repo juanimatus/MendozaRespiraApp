@@ -1,5 +1,6 @@
 import { supabase, getDeviceId } from './supabase';
 import type { ReportWithVerifications, ReportType } from '@/types';
+import type { PhotoAnalysis } from './photo-analysis';
 
 // ── Listar todos los reportes (para el mapa) ──────────────────────────────
 export async function fetchReports(): Promise<ReportWithVerifications[]> {
@@ -32,6 +33,7 @@ export interface CreateReportInput {
   comment?: string;
   municipio?: string | null;
   address?: string | null;
+  analysis?: PhotoAnalysis | null;
   photo: File;
 }
 
@@ -62,6 +64,9 @@ export async function createReport(input: CreateReportInput): Promise<string> {
       comment:     input.comment ?? null,
       municipio:   input.municipio ?? null,
       address:     input.address ?? null,
+      ai_risk:     input.analysis?.peligrosidad ?? null,
+      ai_summary:  input.analysis?.resumen ?? null,
+      ai_analysis: input.analysis ?? null,
       photo_url:   urlData.publicUrl,
       reporter_id: deviceId,
     })

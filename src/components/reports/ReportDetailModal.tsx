@@ -7,7 +7,7 @@ import { X, CheckCircle, Clock, Users } from 'lucide-react';
 
 import { verifyReport, hasVerified } from '@/lib/reports';
 import type { ReportWithVerifications } from '@/types';
-import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, STATUS_LABELS } from '@/types';
+import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, STATUS_LABELS, RISK_LABELS, RISK_COLORS } from '@/types';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 
@@ -126,6 +126,20 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
               {formatDate(report.created_at)}
             </time>
           </div>
+
+          {/* Análisis IA */}
+          {report.ai_summary && (
+            <div className="rounded-xl bg-stone-800/60 p-3 space-y-1.5">
+              {report.ai_risk && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: RISK_COLORS[report.ai_risk] }}>
+                  {RISK_LABELS[report.ai_risk]}
+                </span>
+              )}
+              <p className="text-sm text-stone-300">{report.ai_summary}</p>
+              <p className="text-[11px] text-stone-500">Análisis automático de la foto</p>
+            </div>
+          )}
 
           {/* Comentario */}
           {report.comment && (

@@ -23,10 +23,16 @@ de rol (guardado en `localStorage`, sin login):
 | Mapas      | Leaflet + react-leaflet + OpenStreetMap |
 | Backend    | Supabase (PostgreSQL + Storage + RLS)   |
 | Analytics  | Vercel Analytics                        |
+| IA (fotos) | Claude (Anthropic API) vía `/api/clasificar` |
 
-No hay proveedor de IA externo conectado: la "IA" (`src/lib/ai-engine.ts`) es un motor de
-reglas determinístico (arboricultura + heurísticas de riesgo) pensado para ser reemplazado
-por un modelo real (ej. GPT-4o Vision) manteniendo las mismas firmas de entrada/salida.
+**Análisis de fotos con IA:** al sacar la foto de un reporte, `/api/clasificar` la manda a
+Claude, que devuelve peligrosidad, faltantes (frentes con menos de dos árboles, paradas sin
+sombra), tipo de reporte sugerido y, si la reconoce, la especie. El formulario precarga el
+tipo y el vecino lo puede cambiar. Necesita `ANTHROPIC_API_KEY` en el servidor; sin ella, el
+formulario funciona igual y se elige el tipo a mano. Correr `supabase/migrations/003-analisis-ia-foto.sql`.
+
+Los paneles municipales (`inventario`, `inspector`, `reclamos`) siguen usando
+`src/lib/ai-engine.ts`, un motor de reglas determinístico de arboricultura.
 
 ### PWA / mobile
 
