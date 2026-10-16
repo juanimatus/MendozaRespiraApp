@@ -66,7 +66,7 @@ export default function Home() {
             <Map className="w-4 h-4" /> Ver mapa de reportes
           </Link>
           <Link href="/feed" className="btn-secondary flex items-center justify-center gap-2">
-            <Rss className="w-4 h-4" /> Feed de reportes
+            <Rss className="w-4 h-4" /> Explorar Mendoza
           </Link>
           <Link href="/reportar" className="btn-secondary flex items-center justify-center gap-2">
             <PlusCircle className="w-4 h-4" /> Reportar un tocón

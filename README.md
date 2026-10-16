@@ -59,6 +59,7 @@ La app es instalable en el teléfono (Agregar a pantalla de inicio, Android/iOS)
 src/
 ├── app/
 │   ├── mapa/page.tsx            ← Mapa ciudadano de reportes
+│   ├── feed/page.tsx            ← Explorar Mendoza: mapa por departamento + feed en vivo
 │   ├── reportar/page.tsx        ← Formulario de nuevo reporte
 │   ├── acerca/page.tsx          ← Onboarding / info del proyecto
 │   ├── impacto/page.tsx         ← Métricas públicas de impacto + descarga de datos abiertos
@@ -120,6 +121,8 @@ En tu proyecto de Supabase → **SQL Editor**, ejecutar en orden:
 2. `supabase/schema-ai.sql` — tablas `trees` / `claims` / `tree_interventions`, vistas
    `tree_stats` / `claims_stats` y sus políticas RLS.
 3. `supabase/schema-auth.sql` — tabla `profiles` y roles.
+4. `supabase/migrations/004-explorar.sql` — vista `municipio_stats` y Realtime para
+   el explorador (`/feed`).
 
 Si tu base ya existía antes de un cambio de schema, corré además las migraciones de
 `supabase/migrations/` en orden (por ejemplo `001-municipio.sql`, que agrega el
@@ -212,6 +215,8 @@ Cambiar rol → Inspector / Administrador
 - [ ] Autenticación real para los roles inspector/admin (hoy son de confianza total)
 - [ ] Moderación de reportes ciudadanos (estado `pending/verified`)
 - [x] Exportar reportes ciudadanos a GeoJSON / CSV (`/impacto`)
+- [x] Explorador interactivo por departamento (`/feed`). Para sumar otra provincia o el
+      país: agregar su GeoJSON en `public/geo/` y una entrada en `src/config/region.ts`
 - [ ] Exportar árboles/reclamos a GeoJSON / CSV para organismos ambientales
 - [ ] Subir la versión del service worker (`CACHE_VERSION` en `public/sw.js`) cada vez que
       cambie qué se precachea, para forzar la limpieza de caches viejos en clientes instalados

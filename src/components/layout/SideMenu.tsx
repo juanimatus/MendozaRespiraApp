@@ -16,7 +16,7 @@ const EASE = [0.4, 0, 0.2, 1] as const;
 
 const PUBLIC_LINKS = [
   { href: '/mapa',     label: 'Mapa de reportes',    icon: Map },
-  { href: '/feed',     label: 'Feed de reportes',    icon: Rss },
+  { href: '/feed',     label: 'Explorar Mendoza',    icon: Rss },
   { href: '/reportar', label: 'Nuevo reporte',       icon: PlusCircle },
   { href: '/impacto',  label: 'Impacto y datos',     icon: BarChart3 },
   { href: '/acerca',   label: 'Acerca del proyecto', icon: Info },
