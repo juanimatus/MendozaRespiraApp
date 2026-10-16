@@ -134,7 +134,12 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             </p>
           )}
 
-          {/* Coordenadas */}
+          {/* Ubicación */}
+          {(report.address || report.municipio) && (
+            <p className="text-sm text-stone-400">
+              {[report.address, report.municipio].filter(Boolean).join(' · ')}
+            </p>
+          )}
           <p className="text-xs text-stone-600 font-mono">
             {report.lat.toFixed(5)}, {report.lng.toFixed(5)}
           </p>

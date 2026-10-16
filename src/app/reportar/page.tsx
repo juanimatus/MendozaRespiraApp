@@ -9,6 +9,7 @@ import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle } from 'lucide-react'
 import { createReport } from '@/lib/reports';
 import type { ReportType } from '@/types';
 import { REPORT_TYPE_LABELS } from '@/types';
+import { MUNICIPIOS, reverseGeocode } from '@/lib/municipios';
 
 const TYPES: ReportType[] = ['tocon', 'arbol_talado', 'sospecha'];
 const EASE = [0.4, 0, 0.2, 1] as const;
@@ -34,6 +35,9 @@ export default function ReportarPage() {
   const [photoPreview, setPreview] = useState<string | null>(null);
   const [location, setLocation]   = useState<{ lat: number; lng: number } | null>(null);
   const [locError, setLocError]   = useState<string | null>(null);
+  const [municipio, setMunicipio] = useState<string>('');
+  const [address, setAddress]     = useState<string | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
   const [step, setStep]           = useState<Step>('form');
   const [newReportId, setNewReportId] = useState<string | null>(null);
 
@@ -55,7 +59,19 @@ export default function ReportarPage() {
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setLocation(loc);
+        // Detectar el departamento; si falla, el usuario lo elige a mano
+        setGeocoding(true);
+        reverseGeocode(loc.lat, loc.lng)
+          .then(({ municipio: m, address: addr }) => {
+            if (m) setMunicipio(m);
+            setAddress(addr);
+          })
+          .catch((err) => console.warn('Geocodificación reversa falló', err))
+          .finally(() => setGeocoding(false));
+      },
       (err) => {
         console.error(err);
         setLocError('No se pudo obtener la ubicación. Habilitá el GPS e intentá de nuevo.');
@@ -76,6 +92,8 @@ export default function ReportarPage() {
         lng:     location.lng,
         type,
         comment: comment.trim() || undefined,
+        municipio: municipio || null,
+        address,
         photo,
       });
       setNewReportId(id);
@@ -122,7 +140,7 @@ export default function ReportarPage() {
           <button onClick={() => router.push('/mapa')} className="btn-primary">
             Ver en el mapa
           </button>
-          <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); }} className="btn-secondary">
+          <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); setMunicipio(''); setAddress(null); }} className="btn-secondary">
             Crear otro reporte
           </button>
         </motion.div>
@@ -299,6 +317,21 @@ export default function ReportarPage() {
               </motion.button>
             )}
           </AnimatePresence>
+
+          {location && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="municipio" className="text-xs text-stone-400 shrink-0">Departamento</label>
+              <select
+                id="municipio"
+                value={municipio}
+                onChange={(e) => setMunicipio(e.target.value)}
+                className="form-input py-2 text-sm"
+              >
+                <option value="">{geocoding ? 'Detectando…' : 'Elegí el departamento'}</option>
+                {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+          )}
 
           {locError && (
             <motion.p

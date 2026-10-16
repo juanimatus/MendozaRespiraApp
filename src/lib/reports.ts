@@ -30,6 +30,8 @@ export interface CreateReportInput {
   lng: number;
   type: ReportType;
   comment?: string;
+  municipio?: string | null;
+  address?: string | null;
   photo: File;
 }
 
@@ -58,6 +60,8 @@ export async function createReport(input: CreateReportInput): Promise<string> {
       lng:         input.lng,
       type:        input.type,
       comment:     input.comment ?? null,
+      municipio:   input.municipio ?? null,
+      address:     input.address ?? null,
       photo_url:   urlData.publicUrl,
       reporter_id: deviceId,
     })

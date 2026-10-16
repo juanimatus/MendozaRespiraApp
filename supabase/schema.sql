@@ -18,6 +18,7 @@ create table public.reports (
   lat           double precision not null,
   lng           double precision not null,
   address       text,                         -- geocodificación reversa opcional
+  municipio     text,                         -- departamento de Mendoza (ver src/lib/municipios.ts)
 
   -- Contenido
   type          text not null check (type in ('tocon', 'arbol_talado', 'sospecha')),
@@ -35,6 +36,7 @@ create table public.reports (
 create index reports_location_idx on public.reports (lat, lng);
 create index reports_status_idx   on public.reports (status);
 create index reports_created_idx  on public.reports (created_at desc);
+create index reports_municipio_idx on public.reports (municipio);
 
 -- ============================================================
 -- TABLA: verifications

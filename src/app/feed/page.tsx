@@ -10,11 +10,18 @@ import type { Claim } from '@/types/trees';
 import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS } from '@/types';
 import { URGENCY_LABELS, URGENCY_COLORS, CLAIM_STATUS_LABELS } from '@/types/trees';
 import SideMenu from '@/components/layout/SideMenu';
+import { MUNICIPIOS as DEPARTAMENTOS, ZONAS } from '@/lib/municipios';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 const PAGE_SIZE = 10;
 
-const MUNICIPIOS = ['Todos', 'Capital', 'Guaymallén', 'Las Heras', 'Godoy Cruz', 'Maipú', 'Luján de Cuyo'];
+const MUNICIPIOS = ['Todos', ...Object.keys(ZONAS), ...DEPARTAMENTOS];
+
+// 'Todos' → sin filtro; una zona → sus departamentos; un departamento → ese solo
+function municipiosFor(filter: string): readonly string[] | null {
+  if (filter === 'Todos') return null;
+  return ZONAS[filter] ?? [filter];
+}
 const TIPOS = ['Todos', 'tocon', 'arbol_talado', 'sospecha', 'reclamo'];
 
 type FeedItem =
@@ -52,7 +59,8 @@ function ReportCard({ item }: { item: ReportWithVerifications & { _kind: 'report
         <div className="flex items-center justify-between text-xs text-stone-500 pt-1">
           <span className="flex items-center gap-1">
             <MapPin className="w-3 h-3" />
-            {item.lat.toFixed(4)}, {item.lng.toFixed(4)}
+            {[item.address, item.municipio].filter(Boolean).join(' · ')
+              || `${item.lat.toFixed(4)}, ${item.lng.toFixed(4)}`}
           </span>
           <span className="flex items-center gap-1">
             <CheckCircle className="w-3 h-3 text-green-600" />
@@ -137,12 +145,17 @@ export default function FeedPage() {
       reportQuery = reportQuery.eq('type', tipo);
     }
 
+    const municipios = municipiosFor(municipio);
+    if (municipios) reportQuery = reportQuery.in('municipio', municipios);
+
     // Cargar claims
     let claimQuery = supabase
       .from('claims')
       .select('*')
       .order('created_at', { ascending: false })
       .range(from, to);
+
+    if (municipios) claimQuery = claimQuery.in('municipio', municipios);
 
     const promises: PromiseLike<any>[] = [];
     if (tipo === 'Todos' || tipo !== 'reclamo') promises.push(reportQuery);

@@ -11,6 +11,7 @@ export interface Report {
   lat: number;
   lng: number;
   address: string | null;
+  municipio: string | null;
   type: ReportType;
   comment: string | null;
   photo_url: string;

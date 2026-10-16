@@ -111,6 +111,11 @@ En tu proyecto de Supabase → **SQL Editor**, ejecutar en orden:
    `reports_with_verifications`, políticas RLS y bucket de Storage `report-photos`.
 2. `supabase/schema-ai.sql` — tablas `trees` / `claims` / `tree_interventions`, vistas
    `tree_stats` / `claims_stats` y sus políticas RLS.
+3. `supabase/schema-auth.sql` — tabla `profiles` y roles.
+
+Si tu base ya existía antes de un cambio de schema, corré además las migraciones de
+`supabase/migrations/` en orden (por ejemplo `001-municipio.sql`, que agrega el
+departamento a reportes y reclamos).
 
 ### 4. Configurar variables de entorno
 
@@ -148,7 +153,8 @@ Abrir app (rol: ciudadano)
                └─→ Formulario:
                      1. Tocar para agregar foto (cámara o galería)
                      2. Seleccionar tipo (tocón / árbol talado / sospecha)
-                     3. Capturar ubicación GPS
+                     3. Capturar ubicación GPS (detecta el departamento con
+                        OpenStreetMap; se puede corregir a mano)
                      4. Comentario opcional
                      5. Enviar → aparece en el mapa
 ```
