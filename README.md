@@ -55,11 +55,13 @@ src/
 │   ├── mapa/page.tsx            ← Mapa ciudadano de reportes
 │   ├── reportar/page.tsx        ← Formulario de nuevo reporte
 │   ├── acerca/page.tsx          ← Onboarding / info del proyecto
+│   ├── impacto/page.tsx         ← Métricas públicas de impacto + descarga de datos abiertos
 │   ├── dashboard/page.tsx       ← Panel municipal: stats generales
 │   ├── inventario/page.tsx      ← Inventario de árboles + análisis IA
 │   ├── reclamos/page.tsx        ← Reclamos ciudadanos clasificados por IA
 │   ├── inspector/page.tsx       ← Demo de análisis de árbol (visión + prioridad)
-│   └── api/reports/route.ts     ← API REST de reportes ciudadanos
+│   ├── api/reports/route.ts     ← API REST de reportes ciudadanos
+│   └── api/datos/reportes/route.ts ← Datos abiertos: ?format=csv | geojson (sin reporter_id)
 ├── components/
 │   ├── layout/SideMenu.tsx      ← Menú lateral + selector de rol
 │   ├── map/MapView.tsx          ← Mapa Leaflet con pins
@@ -196,6 +198,7 @@ Cambiar rol → Inspector / Administrador
       `inventario` e `inspector`, o mover la lógica a API routes server-side
 - [ ] Autenticación real para los roles inspector/admin (hoy son de confianza total)
 - [ ] Moderación de reportes ciudadanos (estado `pending/verified`)
+- [x] Exportar reportes ciudadanos a GeoJSON / CSV (`/impacto`)
 - [ ] Exportar árboles/reclamos a GeoJSON / CSV para organismos ambientales
 - [ ] Subir la versión del service worker (`CACHE_VERSION` en `public/sw.js`) cada vez que
       cambie qué se precachea, para forzar la limpieza de caches viejos en clientes instalados
