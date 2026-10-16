@@ -29,6 +29,26 @@ interface Props {
 
 type UnitFeature = Feature<Geometry, { nombre: string }>;
 
+// Créditos del mapa (obligatorios por licencia de OpenStreetMap y CARTO):
+// plegados en un botón "i" para que no tapen el mapa
+function Credits() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="absolute top-3 right-3 z-[999] flex items-center gap-1.5">
+      {open && (
+        <span className="rounded-lg bg-stone-950/90 border border-stone-700 px-2 py-1 text-[10px] text-stone-400 [&_a]:text-stone-300 [&_a:hover]:underline">
+          © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>
+          {' '}© <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a> · {REGION.attribution}
+        </span>
+      )}
+      <button onClick={() => setOpen(o => !o)} aria-label="Créditos del mapa" aria-expanded={open}
+        className="w-6 h-6 rounded-full bg-stone-950/90 border border-stone-700 text-[11px] font-semibold text-stone-400 hover:text-stone-200">
+        i
+      </button>
+    </div>
+  );
+}
+
 // Encuadra la región o el departamento elegido
 function FitTo({ geo, unit }: { geo: FeatureCollection | null; unit: string | null }) {
   const map = useMap();
@@ -93,6 +113,7 @@ export default function ExplorerMap({
   });
 
   return (
+    <div className="relative h-full w-full">
     <MapContainer
       center={REGION.center}
       zoom={REGION.zoom}
@@ -100,10 +121,9 @@ export default function ExplorerMap({
       maxBounds={L.latLngBounds(REGION.bounds).pad(0.3)}
       className="h-full w-full bg-stone-950"
       zoomControl={false}
-      attributionControl
+      attributionControl={false}
     >
       <TileLayer
-        attribution={`&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a> · ${REGION.attribution}`}
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       <FitTo geo={geo} unit={selectedUnit} />
@@ -155,5 +175,7 @@ export default function ExplorerMap({
         );
       })}
     </MapContainer>
+    <Credits />
+    </div>
   );
 }
