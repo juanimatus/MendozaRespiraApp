@@ -8,7 +8,7 @@ import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle, Sparkles } from 'luc
 
 import { createReport } from '@/lib/reports';
 import type { ReportType } from '@/types';
-import { REPORT_TYPE_LABELS, RISK_LABELS, RISK_COLORS } from '@/types';
+import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, RISK_LABELS, RISK_COLORS } from '@/types';
 import { downscaleImage, fileToBase64 } from '@/lib/image';
 import { reportTypeFor, type PhotoAnalysis } from '@/lib/photo-analysis';
 import { MUNICIPIOS, reverseGeocode } from '@/lib/municipios';
@@ -20,6 +20,12 @@ const TYPES: ReportType[] = [
 const EASE = [0.4, 0, 0.2, 1] as const;
 
 type Step = 'form' | 'submitting' | 'success';
+
+// ['la foto', 'el tipo'] → "la foto y el tipo"
+function listar(items: (string | false)[]) {
+  const xs = items.filter(Boolean) as string[];
+  return xs.length > 1 ? `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}` : xs[0] ?? '';
+}
 
 // Variants para el stagger de secciones del formulario
 const sectionVariants = {
@@ -34,7 +40,7 @@ export default function ReportarPage() {
   const router = useRouter();
 
   // Estado del formulario
-  const [type, setType]           = useState<ReportType>('tocon');
+  const [type, setType]           = useState<ReportType | null>(null);
   const [typeTouched, setTypeTouched] = useState(false);
   const [analysis, setAnalysis]   = useState<PhotoAnalysis | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -120,7 +126,7 @@ export default function ReportarPage() {
   // ── Envío ─────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!photo || !location) return;
+    if (!photo || !location || !type) return;
 
     setStep('submitting');
     try {
@@ -144,7 +150,7 @@ export default function ReportarPage() {
   }
 
   const isSubmitting = step === 'submitting';
-  const canSubmit = !!photo && !!location && !isSubmitting;
+  const canSubmit = !!photo && !!location && !!type && !isSubmitting;
 
   // ── Pantalla de éxito ────────────────────────────────────────────────
   if (step === 'success') {
@@ -175,10 +181,10 @@ export default function ReportarPage() {
           transition={{ duration: 0.2, delay: 0.14, ease: EASE }}
           className="flex flex-col gap-3 w-full max-w-xs"
         >
-          <button onClick={() => router.push('/mapa')} className="btn-primary">
+          <button onClick={() => router.push('/feed')} className="btn-primary">
             Ver en el mapa
           </button>
-          <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); setMunicipio(''); setAddress(null); setAnalysis(null); setAnalysisError(null); setTypeTouched(false); }} className="btn-secondary">
+          <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); setMunicipio(''); setAddress(null); setAnalysis(null); setAnalysisError(null); setType(null); setTypeTouched(false); }} className="btn-secondary">
             Crear otro reporte
           </button>
         </motion.div>
@@ -332,13 +338,17 @@ export default function ReportarPage() {
                 type="button"
                 whileTap={{ scale: 0.96 }}
                 onClick={() => { setType(t); setTypeTouched(true); }}
-                className={`py-2.5 px-2 rounded-xl text-xs font-semibold border transition-colors duration-150
+                className={`relative flex items-center gap-2 py-2.5 px-3 rounded-xl text-left text-xs font-semibold border transition-colors duration-150
                   ${type === t
                     ? 'bg-green-800 border-green-600 text-white'
                     : 'bg-stone-900 border-stone-700 text-stone-400 hover:border-stone-500'
                   }`}
               >
+                <span className="w-2 h-2 shrink-0 rounded-full" style={{ backgroundColor: REPORT_TYPE_COLORS[t] }} />
                 {REPORT_TYPE_LABELS[t]}
+                {type === t && !typeTouched && analysis && (
+                  <span className="absolute -top-2 right-1.5 rounded-full bg-green-500 px-1.5 text-[9px] font-bold text-stone-950">IA</span>
+                )}
               </motion.button>
             ))}
           </div>
@@ -467,9 +477,9 @@ export default function ReportarPage() {
             }
           </motion.button>
 
-          {!photo && (
+          {!canSubmit && !isSubmitting && (
             <p className="text-center text-xs text-stone-600 mt-3">
-              Se requiere foto y ubicación para enviar.
+              Falta {listar([!photo && 'la foto', !type && 'el tipo', !location && 'la ubicación'])}.
             </p>
           )}
         </motion.div>

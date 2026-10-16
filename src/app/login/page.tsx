@@ -11,7 +11,7 @@ const EASE = [0.4, 0, 0.2, 1] as const;
 type Mode = 'login' | 'register';
 
 const ROLE_REDIRECT: Record<string, string> = {
-  ciudadano: '/mapa',
+  ciudadano: '/feed',
   inspector: '/inspector',
   admin:     '/dashboard',
 };
@@ -42,7 +42,7 @@ export default function LoginPage() {
       const { data: profile } = await supabase
         .from('profiles').select('role').eq('id', data.user.id).single();
       const role = profile?.role ?? 'ciudadano';
-      router.push(ROLE_REDIRECT[role] ?? '/mapa');
+      router.push(ROLE_REDIRECT[role] ?? '/feed');
       router.refresh();
 
     } else {

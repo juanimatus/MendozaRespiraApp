@@ -9,10 +9,13 @@ import 'leaflet/dist/leaflet.css';
 import { REGION } from '@/config/region';
 import type { MunicipioStats } from '@/lib/explorer';
 import type { ReportWithVerifications } from '@/types';
-import type { Metric } from './metrics';
+import { CHORO_STEPS, type Metric } from './metrics';
 import { REPORT_TYPE_COLORS, REPORT_TYPE_LABELS } from '@/types';
 
-const CHORO_COLOR = '#f97316';
+function colorFor(value: number, max: number) {
+  const i = Math.min(CHORO_STEPS.length - 1, Math.floor((value / max) * CHORO_STEPS.length));
+  return CHORO_STEPS[Math.max(0, i)];
+}
 
 interface Props {
   stats:            Map<string, MunicipioStats>;
@@ -69,8 +72,8 @@ export default function ExplorerMap({
       color:       isSelected ? '#fafaf9' : isHovered ? '#d6d3d1' : '#57534e',
       weight:      isSelected ? 2.5 : isHovered ? 2 : 1,
       dashArray:   value === 0 ? '3 4' : undefined,
-      fillColor:   CHORO_COLOR,
-      fillOpacity: value === 0 ? 0.02 : (dimmed ? 0.06 : 0.12 + 0.6 * (value / max)),
+      fillColor:   value === 0 ? '#78716c' : colorFor(value, max),
+      fillOpacity: value === 0 ? 0.04 : dimmed ? 0.15 : isSelected ? 0.85 : 0.65,
     };
   }
 

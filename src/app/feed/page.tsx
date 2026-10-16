@@ -9,7 +9,7 @@ import { TreeDeciduous, Menu, MapPin, CheckCircle, Clock, X, Plus, AlertTriangle
 
 import SideMenu from '@/components/layout/SideMenu';
 import ReportDetailModal from '@/components/reports/ReportDetailModal';
-import { METRIC_LABELS, type Metric } from '@/components/explorer/metrics';
+import { METRIC_LABELS, CHORO_STEPS, type Metric } from '@/components/explorer/metrics';
 import { REGION } from '@/config/region';
 import {
   fetchFeedPage, fetchMapPoints, fetchMunicipioStats, matchesFilters, subscribeToNewReports,
@@ -269,15 +269,15 @@ export default function ExplorarPage() {
           </div>
 
           {/* Leyenda */}
-          <div className="absolute bottom-6 left-3 z-[999] rounded-xl border border-stone-700 bg-stone-950/90 px-3 py-2 text-[11px] text-stone-400 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span>Menos</span>
-              <span className="h-2 w-24 rounded-full" style={{ background: 'linear-gradient(90deg, rgba(249,115,22,0.15), rgba(249,115,22,0.75))' }} />
-              <span>Más</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-4 rounded-sm border border-dashed border-stone-500" /> Sin reportes
-            </div>
+          <div className="absolute bottom-6 left-3 z-[999] flex items-center gap-2 rounded-xl border border-stone-700 bg-stone-950/90 px-2.5 py-1.5 text-[10px] text-stone-400">
+            <span>Menos</span>
+            <span className="flex">
+              {CHORO_STEPS.map(c => <span key={c} className="h-2.5 w-3.5 first:rounded-l last:rounded-r" style={{ backgroundColor: c }} />)}
+            </span>
+            <span>Más</span>
+            <span className="hidden sm:flex items-center gap-1.5 border-l border-stone-700 pl-2">
+              <span className="h-2.5 w-3.5 rounded-sm border border-dashed border-stone-500" /> Sin reportes
+            </span>
           </div>
 
           <Link href="/reportar"
@@ -323,7 +323,7 @@ export default function ExplorarPage() {
 
             {/* Filtros */}
             <div className="space-y-2">
-              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+              <div className="flex gap-2 overflow-x-auto pb-1 pr-10 no-scrollbar fade-right">
                 {Object.keys(REGION.zones).map(z => (
                   <Chip key={z} active={zone === z && !selectedUnit}
                     onClick={() => { setSelectedUnit(null); setZone(zone === z ? null : z); }}>
@@ -331,7 +331,7 @@ export default function ExplorarPage() {
                   </Chip>
                 ))}
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+              <div className="flex gap-2 overflow-x-auto pb-1 pr-10 no-scrollbar fade-right">
                 <Chip active={onlyHighRisk} onClick={() => setOnlyHighRisk(v => !v)}>
                   <AlertTriangle className="w-3 h-3" /> Riesgo alto
                 </Chip>

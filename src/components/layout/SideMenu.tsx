@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   Map, PlusCircle, Info, X, TreeDeciduous,
   LayoutDashboard, ClipboardList, MessageSquareWarning,
-  Search, LogIn, LogOut, Rss, BarChart3,
+  Search, LogIn, LogOut, BarChart3,
 } from 'lucide-react';
 import { useAuth, ROLE_LABELS, ROLE_COLORS, ROLE_BADGE } from '@/lib/auth-context';
 
@@ -15,8 +15,7 @@ interface Props { open: boolean; onClose: () => void; }
 const EASE = [0.4, 0, 0.2, 1] as const;
 
 const PUBLIC_LINKS = [
-  { href: '/mapa',     label: 'Mapa de reportes',    icon: Map },
-  { href: '/feed',     label: 'Explorar Mendoza',    icon: Rss },
+  { href: '/feed',     label: 'Explorar el mapa',    icon: Map },
   { href: '/reportar', label: 'Nuevo reporte',       icon: PlusCircle },
   { href: '/impacto',  label: 'Impacto y datos',     icon: BarChart3 },
   { href: '/acerca',   label: 'Acerca del proyecto', icon: Info },
