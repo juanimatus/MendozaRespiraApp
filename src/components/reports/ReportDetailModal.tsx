@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { X, CheckCircle, Clock, Users } from 'lucide-react';
+import { X, CheckCircle, Clock, Users, BadgeCheck } from 'lucide-react';
 
-import { verifyReport, hasVerified } from '@/lib/reports';
+import { verifyReport, hasVerified, isRateLimited, RATE_LIMIT_MESSAGE } from '@/lib/reports';
 import type { ReportWithVerifications } from '@/types';
-import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, STATUS_LABELS } from '@/types';
+import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, STATUS_LABELS, RISK_LABELS, RISK_COLORS } from '@/types';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 
@@ -28,6 +28,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
   const [alreadyVerified, setAlreadyVerified] = useState(false);
   const [verifying, setVerifying]             = useState(false);
   const [count, setCount]                     = useState(report.verification_count);
+  const [verifyError, setVerifyError]         = useState<string | null>(null);
 
   useEffect(() => {
     hasVerified(report.id).then(setAlreadyVerified);
@@ -43,6 +44,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
   async function handleVerify() {
     if (alreadyVerified || verifying) return;
     setVerifying(true);
+    setVerifyError(null);
     try {
       await verifyReport(report.id);
       setAlreadyVerified(true);
@@ -50,6 +52,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
       onVerified();
     } catch (err) {
       console.error(err);
+      setVerifyError(isRateLimited(err) ? RATE_LIMIT_MESSAGE : 'No se pudo confirmar. Probá de nuevo.');
     } finally {
       setVerifying(false);
     }
@@ -127,6 +130,37 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             </time>
           </div>
 
+          {/* Revisión técnica */}
+          {report.reviewed_at && (
+            <div className="rounded-xl border border-sky-900/60 bg-sky-950/30 p-3 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <BadgeCheck className="w-4 h-4 text-sky-400" />
+                <span className="text-xs font-semibold text-sky-300">Revisado por ingeniero agrónomo</span>
+                {report.review_risk && (
+                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                    style={{ backgroundColor: RISK_COLORS[report.review_risk] }}>
+                    {RISK_LABELS[report.review_risk]}
+                  </span>
+                )}
+              </div>
+              {report.review_note && <p className="text-sm text-stone-300">{report.review_note}</p>}
+            </div>
+          )}
+
+          {/* Análisis IA */}
+          {report.ai_summary && (
+            <div className="rounded-xl bg-stone-800/60 p-3 space-y-1.5">
+              {report.ai_risk && !report.reviewed_at && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: RISK_COLORS[report.ai_risk] }}>
+                  {RISK_LABELS[report.ai_risk]}
+                </span>
+              )}
+              <p className="text-sm text-stone-300">{report.ai_summary}</p>
+              <p className="text-[11px] text-stone-500">Análisis automático de la foto</p>
+            </div>
+          )}
+
           {/* Comentario */}
           {report.comment && (
             <p className="text-stone-300 text-sm leading-relaxed">
@@ -134,7 +168,12 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             </p>
           )}
 
-          {/* Coordenadas */}
+          {/* Ubicación */}
+          {(report.address || report.municipio) && (
+            <p className="text-sm text-stone-400">
+              {[report.address, report.municipio].filter(Boolean).join(' · ')}
+            </p>
+          )}
           <p className="text-xs text-stone-600 font-mono">
             {report.lat.toFixed(5)}, {report.lng.toFixed(5)}
           </p>
@@ -176,6 +215,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             }
             {alreadyVerified ? 'Ya lo confirmaste' : 'Confirmo que existe'}
           </motion.button>
+          {verifyError && <p className="text-xs text-red-400 text-center">{verifyError}</p>}
         </div>
       </motion.div>
     </motion.div>

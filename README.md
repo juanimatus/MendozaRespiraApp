@@ -23,10 +23,16 @@ de rol (guardado en `localStorage`, sin login):
 | Mapas      | Leaflet + react-leaflet + OpenStreetMap |
 | Backend    | Supabase (PostgreSQL + Storage + RLS)   |
 | Analytics  | Vercel Analytics                        |
+| IA (fotos) | Claude (Anthropic API) vía `/api/clasificar` |
 
-No hay proveedor de IA externo conectado: la "IA" (`src/lib/ai-engine.ts`) es un motor de
-reglas determinístico (arboricultura + heurísticas de riesgo) pensado para ser reemplazado
-por un modelo real (ej. GPT-4o Vision) manteniendo las mismas firmas de entrada/salida.
+**Análisis de fotos con IA:** al sacar la foto de un reporte, `/api/clasificar` la manda a
+Claude, que devuelve peligrosidad, faltantes (frentes con menos de dos árboles, paradas sin
+sombra), tipo de reporte sugerido y, si la reconoce, la especie. El formulario precarga el
+tipo y el vecino lo puede cambiar. Necesita `ANTHROPIC_API_KEY` en el servidor; sin ella, el
+formulario funciona igual y se elige el tipo a mano. Correr `supabase/migrations/003-analisis-ia-foto.sql`.
+
+Los paneles municipales (`inventario`, `inspector`, `reclamos`) siguen usando
+`src/lib/ai-engine.ts`, un motor de reglas determinístico de arboricultura.
 
 ### PWA / mobile
 
@@ -53,13 +59,16 @@ La app es instalable en el teléfono (Agregar a pantalla de inicio, Android/iOS)
 src/
 ├── app/
 │   ├── mapa/page.tsx            ← Mapa ciudadano de reportes
+│   ├── feed/page.tsx            ← Explorar Mendoza: mapa por departamento + feed en vivo
 │   ├── reportar/page.tsx        ← Formulario de nuevo reporte
 │   ├── acerca/page.tsx          ← Onboarding / info del proyecto
+│   ├── impacto/page.tsx         ← Métricas públicas de impacto + descarga de datos abiertos
 │   ├── dashboard/page.tsx       ← Panel municipal: stats generales
 │   ├── inventario/page.tsx      ← Inventario de árboles + análisis IA
 │   ├── reclamos/page.tsx        ← Reclamos ciudadanos clasificados por IA
 │   ├── inspector/page.tsx       ← Demo de análisis de árbol (visión + prioridad)
-│   └── api/reports/route.ts     ← API REST de reportes ciudadanos
+│   ├── api/reports/route.ts     ← API REST de reportes ciudadanos
+│   └── api/datos/reportes/route.ts ← Datos abiertos: ?format=csv | geojson (sin reporter_id)
 ├── components/
 │   ├── layout/SideMenu.tsx      ← Menú lateral + selector de rol
 │   ├── map/MapView.tsx          ← Mapa Leaflet con pins
@@ -111,6 +120,17 @@ En tu proyecto de Supabase → **SQL Editor**, ejecutar en orden:
    `reports_with_verifications`, políticas RLS y bucket de Storage `report-photos`.
 2. `supabase/schema-ai.sql` — tablas `trees` / `claims` / `tree_interventions`, vistas
    `tree_stats` / `claims_stats` y sus políticas RLS.
+3. `supabase/schema-auth.sql` — tabla `profiles` y roles.
+4. `supabase/migrations/004-explorar.sql` — vista `municipio_stats` y Realtime para
+   el explorador (`/feed`).
+5. `supabase/migrations/005-revision-tecnica.sql` — revisión técnica de reportes por un
+   ingeniero agrónomo (rol inspector o admin) en `/revision`.
+6. `supabase/migrations/006-tipos-rama-seco.sql` — tipos de reporte "Rama peligrosa" y "Árbol seco".
+7. `supabase/migrations/007-seguridad.sql` — solo staff edita reclamos y árboles, límite de envíos por IP, límites de fotos y descarte de reportes.
+
+Si tu base ya existía antes de un cambio de schema, corré además las migraciones de
+`supabase/migrations/` en orden (por ejemplo `001-municipio.sql`, que agrega el
+departamento a reportes y reclamos).
 
 ### 4. Configurar variables de entorno
 
@@ -148,10 +168,18 @@ Abrir app (rol: ciudadano)
                └─→ Formulario:
                      1. Tocar para agregar foto (cámara o galería)
                      2. Seleccionar tipo (tocón / árbol talado / sospecha)
-                     3. Capturar ubicación GPS
+                     3. Capturar ubicación GPS (detecta el departamento con
+                        OpenStreetMap; se puede corregir a mano)
                      4. Comentario opcional
                      5. Enviar → aparece en el mapa
 ```
+
+## Automatizaciones (n8n / Make)
+
+Cada reporte o reclamo nuevo puede disparar un webhook hacia n8n o Make para avisar al
+municipio, registrar en una planilla o mandar resúmenes. Se activa con
+`supabase/migrations/002-webhook-nuevos-reportes.sql`; el paso a paso está en
+[`docs/automatizaciones.md`](docs/automatizaciones.md).
 
 ## Flujo municipal (rol inspector / admin)
 
@@ -190,6 +218,9 @@ Cambiar rol → Inspector / Administrador
       `inventario` e `inspector`, o mover la lógica a API routes server-side
 - [ ] Autenticación real para los roles inspector/admin (hoy son de confianza total)
 - [ ] Moderación de reportes ciudadanos (estado `pending/verified`)
+- [x] Exportar reportes ciudadanos a GeoJSON / CSV (`/impacto`)
+- [x] Explorador interactivo por departamento (`/feed`). Para sumar otra provincia o el
+      país: agregar su GeoJSON en `public/geo/` y una entrada en `src/config/region.ts`
 - [ ] Exportar árboles/reclamos a GeoJSON / CSV para organismos ambientales
 - [ ] Subir la versión del service worker (`CACHE_VERSION` en `public/sw.js`) cada vez que
       cambie qué se precachea, para forzar la limpieza de caches viejos en clientes instalados

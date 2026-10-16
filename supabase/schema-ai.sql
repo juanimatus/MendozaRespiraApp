@@ -89,6 +89,7 @@ create table public.claims (
   lat             double precision,
   lng             double precision,
   address         text,
+  municipio       text,   -- departamento de Mendoza (ver src/lib/municipios.ts)
   photo_url       text,
 
   -- Contenido

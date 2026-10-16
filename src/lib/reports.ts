@@ -1,5 +1,6 @@
 import { supabase, getDeviceId } from './supabase';
 import type { ReportWithVerifications, ReportType } from '@/types';
+import type { PhotoAnalysis } from './photo-analysis';
 
 // ── Listar todos los reportes (para el mapa) ──────────────────────────────
 export async function fetchReports(): Promise<ReportWithVerifications[]> {
@@ -30,6 +31,9 @@ export interface CreateReportInput {
   lng: number;
   type: ReportType;
   comment?: string;
+  municipio?: string | null;
+  address?: string | null;
+  analysis?: PhotoAnalysis | null;
   photo: File;
 }
 
@@ -58,6 +62,11 @@ export async function createReport(input: CreateReportInput): Promise<string> {
       lng:         input.lng,
       type:        input.type,
       comment:     input.comment ?? null,
+      municipio:   input.municipio ?? null,
+      address:     input.address ?? null,
+      ai_risk:     input.analysis?.peligrosidad ?? null,
+      ai_summary:  input.analysis?.resumen ?? null,
+      ai_analysis: input.analysis ?? null,
       photo_url:   urlData.publicUrl,
       reporter_id: deviceId,
     })
@@ -66,6 +75,15 @@ export async function createReport(input: CreateReportInput): Promise<string> {
 
   if (error) throw error;
   return data.id as string;
+}
+
+// ── Límite de envíos (migración 007) ─────────────────────────────────────
+// La base corta con hint 'rate_limit' si una misma IP manda demasiados envíos seguidos
+export const RATE_LIMIT_MESSAGE = 'Demasiados envíos seguidos. Probá de nuevo en un rato.';
+
+export function isRateLimited(err: unknown): boolean {
+  const e = err as { hint?: string; message?: string } | null;
+  return e?.hint === 'rate_limit' || !!e?.message?.includes('Demasiados envíos');
 }
 
 // ── Verificar un reporte ──────────────────────────────────────────────────

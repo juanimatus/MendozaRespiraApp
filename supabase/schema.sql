@@ -18,11 +18,20 @@ create table public.reports (
   lat           double precision not null,
   lng           double precision not null,
   address       text,                         -- geocodificación reversa opcional
+  municipio     text,                         -- departamento de Mendoza (ver src/lib/municipios.ts)
 
   -- Contenido
-  type          text not null check (type in ('tocon', 'arbol_talado', 'sospecha')),
+  type          text not null check (type in (
+                  'tocon', 'arbol_talado', 'sospecha',
+                  'arbol_peligroso', 'falta_frentista', 'parada_sin_arbol',
+                  'rama_peligrosa', 'arbol_seco')),
   comment       text,
   photo_url     text not null,               -- URL pública de Supabase Storage
+
+  -- Análisis de la foto con IA (ver src/lib/photo-analysis.ts)
+  ai_risk       text check (ai_risk in ('ninguna', 'baja', 'media', 'alta', 'critica')),
+  ai_summary    text,
+  ai_analysis   jsonb,
 
   -- Estado
   status        text not null default 'pending' check (status in ('pending', 'verified')),
@@ -35,6 +44,8 @@ create table public.reports (
 create index reports_location_idx on public.reports (lat, lng);
 create index reports_status_idx   on public.reports (status);
 create index reports_created_idx  on public.reports (created_at desc);
+create index reports_municipio_idx on public.reports (municipio);
+create index reports_ai_risk_idx   on public.reports (ai_risk);
 
 -- ============================================================
 -- TABLA: verifications

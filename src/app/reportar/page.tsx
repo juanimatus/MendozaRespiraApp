@@ -4,16 +4,28 @@ import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle } from 'lucide-react';
+import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle, Sparkles } from 'lucide-react';
 
-import { createReport } from '@/lib/reports';
+import { createReport, isRateLimited, RATE_LIMIT_MESSAGE } from '@/lib/reports';
 import type { ReportType } from '@/types';
-import { REPORT_TYPE_LABELS } from '@/types';
+import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, RISK_LABELS, RISK_COLORS } from '@/types';
+import { downscaleImage, fileToBase64 } from '@/lib/image';
+import { reportTypeFor, type PhotoAnalysis } from '@/lib/photo-analysis';
+import { MUNICIPIOS, reverseGeocode } from '@/lib/municipios';
 
-const TYPES: ReportType[] = ['tocon', 'arbol_talado', 'sospecha'];
+const TYPES: ReportType[] = [
+  'arbol_peligroso', 'rama_peligrosa', 'arbol_seco', 'falta_frentista',
+  'parada_sin_arbol', 'tocon', 'arbol_talado', 'sospecha',
+];
 const EASE = [0.4, 0, 0.2, 1] as const;
 
 type Step = 'form' | 'submitting' | 'success';
+
+// ['la foto', 'el tipo'] → "la foto y el tipo"
+function listar(items: (string | false)[]) {
+  const xs = items.filter(Boolean) as string[];
+  return xs.length > 1 ? `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}` : xs[0] ?? '';
+}
 
 // Variants para el stagger de secciones del formulario
 const sectionVariants = {
@@ -28,23 +40,60 @@ export default function ReportarPage() {
   const router = useRouter();
 
   // Estado del formulario
-  const [type, setType]           = useState<ReportType>('tocon');
+  const [type, setType]           = useState<ReportType | null>(null);
+  const [typeTouched, setTypeTouched] = useState(false);
+  const [analysis, setAnalysis]   = useState<PhotoAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [comment, setComment]     = useState('');
   const [photo, setPhoto]         = useState<File | null>(null);
   const [photoPreview, setPreview] = useState<string | null>(null);
   const [location, setLocation]   = useState<{ lat: number; lng: number } | null>(null);
   const [locError, setLocError]   = useState<string | null>(null);
+  const [municipio, setMunicipio] = useState<string>('');
+  const [address, setAddress]     = useState<string | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
   const [step, setStep]           = useState<Step>('form');
   const [newReportId, setNewReportId] = useState<string | null>(null);
 
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Foto ──────────────────────────────────────────────────────────────
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const original = e.target.files?.[0];
+    if (!original) return;
+    setPreview(URL.createObjectURL(original));
+    setAnalysis(null);
+    setAnalysisError(null);
+
+    const file = await downscaleImage(original);
     setPhoto(file);
-    setPreview(URL.createObjectURL(file));
+    analyzePhoto(file);
+  }
+
+  // ── Análisis con IA: sugiere tipo y peligrosidad; el vecino puede cambiarlo
+  async function analyzePhoto(file: File) {
+    setAnalyzing(true);
+    try {
+      const res = await fetch('/api/clasificar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: await fileToBase64(file), media_type: file.type }),
+      });
+      // 503 = análisis con IA no configurado: el vecino elige el tipo y lo revisa el técnico
+      if (res.status === 503) return;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Error al analizar');
+      const result = data as PhotoAnalysis;
+      setAnalysis(result);
+      const suggested = reportTypeFor(result.categoria);
+      if (suggested && !typeTouched) setType(suggested);
+    } catch (err) {
+      console.warn('Análisis de foto falló', err);
+      setAnalysisError('No pudimos analizar la foto. Elegí el tipo de reporte a mano.');
+    } finally {
+      setAnalyzing(false);
+    }
   }
 
   // ── Geolocalización ──────────────────────────────────────────────────
@@ -55,7 +104,19 @@ export default function ReportarPage() {
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setLocation(loc);
+        // Detectar el departamento; si falla, el usuario lo elige a mano
+        setGeocoding(true);
+        reverseGeocode(loc.lat, loc.lng)
+          .then(({ municipio: m, address: addr }) => {
+            if (m) setMunicipio(m);
+            setAddress(addr);
+          })
+          .catch((err) => console.warn('Geocodificación reversa falló', err))
+          .finally(() => setGeocoding(false));
+      },
       (err) => {
         console.error(err);
         setLocError('No se pudo obtener la ubicación. Habilitá el GPS e intentá de nuevo.');
@@ -67,7 +128,7 @@ export default function ReportarPage() {
   // ── Envío ─────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!photo || !location) return;
+    if (!photo || !location || !type) return;
 
     setStep('submitting');
     try {
@@ -76,6 +137,9 @@ export default function ReportarPage() {
         lng:     location.lng,
         type,
         comment: comment.trim() || undefined,
+        municipio: municipio || null,
+        address,
+        analysis,
         photo,
       });
       setNewReportId(id);
@@ -83,12 +147,12 @@ export default function ReportarPage() {
     } catch (err) {
       console.error(err);
       setStep('form');
-      alert('Error al enviar el reporte. Revisá tu conexión e intentá de nuevo.');
+      alert(isRateLimited(err) ? RATE_LIMIT_MESSAGE : 'Error al enviar el reporte. Revisá tu conexión e intentá de nuevo.');
     }
   }
 
   const isSubmitting = step === 'submitting';
-  const canSubmit = !!photo && !!location && !isSubmitting;
+  const canSubmit = !!photo && !!location && !!type && !isSubmitting;
 
   // ── Pantalla de éxito ────────────────────────────────────────────────
   if (step === 'success') {
@@ -119,10 +183,10 @@ export default function ReportarPage() {
           transition={{ duration: 0.2, delay: 0.14, ease: EASE }}
           className="flex flex-col gap-3 w-full max-w-xs"
         >
-          <button onClick={() => router.push('/mapa')} className="btn-primary">
+          <button onClick={() => router.push('/feed')} className="btn-primary">
             Ver en el mapa
           </button>
-          <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); }} className="btn-secondary">
+          <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); setMunicipio(''); setAddress(null); setAnalysis(null); setAnalysisError(null); setType(null); setTypeTouched(false); }} className="btn-secondary">
             Crear otro reporte
           </button>
         </motion.div>
@@ -172,7 +236,7 @@ export default function ReportarPage() {
                 <Image src={photoPreview} alt="Preview" fill className="object-cover" />
                 <button
                   type="button"
-                  onClick={() => { setPhoto(null); setPreview(null); if (fileRef.current) fileRef.current.value = ''; }}
+                  onClick={() => { setPhoto(null); setPreview(null); setAnalysis(null); setAnalysisError(null); if (fileRef.current) fileRef.current.value = ''; }}
                   className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2.5 py-1 rounded-lg"
                 >
                   Cambiar
@@ -201,6 +265,53 @@ export default function ReportarPage() {
             )}
           </AnimatePresence>
 
+          {analyzing && (
+            <p className="flex items-center gap-2 text-xs text-stone-400">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Analizando la foto…
+            </p>
+          )}
+          {analysisError && <p className="text-xs text-amber-400">{analysisError}</p>}
+          {analysis && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.15, ease: EASE }}
+              className="rounded-xl border border-stone-700 bg-stone-900 p-3 space-y-2 text-sm"
+            >
+              <div className="flex items-center gap-2 flex-wrap">
+                <Sparkles className="w-4 h-4 text-green-400" />
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: RISK_COLORS[analysis.peligrosidad] }}>
+                  {RISK_LABELS[analysis.peligrosidad]}
+                </span>
+                {analysis.arboles_faltantes > 0 && (
+                  <span className="text-xs text-sky-300">
+                    Faltan {analysis.arboles_faltantes} árbol{analysis.arboles_faltantes === 1 ? '' : 'es'}
+                  </span>
+                )}
+              </div>
+              <p className="text-stone-300">{analysis.resumen}</p>
+              {analysis.motivos.length > 0 && (
+                <ul className="text-xs text-stone-400 list-disc pl-4 space-y-0.5">
+                  {analysis.motivos.map((m, i) => <li key={i}>{m}</li>)}
+                </ul>
+              )}
+              {analysis.especie_probable && (
+                <p className="text-xs text-stone-500">
+                  Especie probable: {analysis.especie_probable}
+                  {analysis.especie_confianza && ` (confianza ${analysis.especie_confianza})`}
+                </p>
+              )}
+              {!reportTypeFor(analysis.categoria) && (
+                <p className="text-xs text-amber-400">
+                  {analysis.categoria === 'no_es_arbolado'
+                    ? 'La foto no parece mostrar arbolado. Revisala antes de enviar.'
+                    : 'No vemos un problema en la foto. Si lo hay, elegí el tipo abajo y contalo en el comentario.'}
+                </p>
+              )}
+            </motion.div>
+          )}
+
           <input
             ref={fileRef}
             type="file"
@@ -222,20 +333,24 @@ export default function ReportarPage() {
           <label className="text-sm font-medium text-stone-300">
             Tipo de reporte <span className="text-red-400">*</span>
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {TYPES.map((t) => (
               <motion.button
                 key={t}
                 type="button"
                 whileTap={{ scale: 0.96 }}
-                onClick={() => setType(t)}
-                className={`py-2.5 px-2 rounded-xl text-xs font-semibold border transition-colors duration-150
+                onClick={() => { setType(t); setTypeTouched(true); }}
+                className={`relative flex items-center gap-2 py-2.5 px-3 rounded-xl text-left text-xs font-semibold border transition-colors duration-150
                   ${type === t
                     ? 'bg-green-800 border-green-600 text-white'
                     : 'bg-stone-900 border-stone-700 text-stone-400 hover:border-stone-500'
                   }`}
               >
+                <span className="w-2 h-2 shrink-0 rounded-full" style={{ backgroundColor: REPORT_TYPE_COLORS[t] }} />
                 {REPORT_TYPE_LABELS[t]}
+                {type === t && !typeTouched && analysis && (
+                  <span className="absolute -top-2 right-1.5 rounded-full bg-green-500 px-1.5 text-[9px] font-bold text-stone-950">IA</span>
+                )}
               </motion.button>
             ))}
           </div>
@@ -300,6 +415,21 @@ export default function ReportarPage() {
             )}
           </AnimatePresence>
 
+          {location && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="municipio" className="text-xs text-stone-400 shrink-0">Departamento</label>
+              <select
+                id="municipio"
+                value={municipio}
+                onChange={(e) => setMunicipio(e.target.value)}
+                className="form-input py-2 text-sm"
+              >
+                <option value="">{geocoding ? 'Detectando…' : 'Elegí el departamento'}</option>
+                {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+          )}
+
           {locError && (
             <motion.p
               initial={{ opacity: 0, height: 0 }}
@@ -349,9 +479,9 @@ export default function ReportarPage() {
             }
           </motion.button>
 
-          {!photo && (
+          {!canSubmit && !isSubmitting && (
             <p className="text-center text-xs text-stone-600 mt-3">
-              Se requiere foto y ubicación para enviar.
+              Falta {listar([!photo && 'la foto', !type && 'el tipo', !location && 'la ubicación'])}.
             </p>
           )}
         </motion.div>

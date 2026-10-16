@@ -153,7 +153,7 @@ export default function DashboardPage() {
             { href: '/reclamos', emoji: '🤖', title: 'Reclamos IA', desc: 'Clasificación automática de reclamos ciudadanos' },
             { href: '/inspector', emoji: '🔍', title: 'Inspector', desc: 'Analizar imágenes con visión computacional' },
             { href: '/inventario', emoji: '🌳', title: 'Inventario', desc: 'Base de datos del arbolado municipal' },
-            { href: '/mapa', emoji: '🗺️', title: 'Mapa vivo', desc: 'Reportes ciudadanos en tiempo real' },
+            { href: '/feed', emoji: '🗺️', title: 'Mapa vivo', desc: 'Reportes ciudadanos en tiempo real' },
           ].map(({ href, emoji, title, desc }) => (
             <Link key={href} href={href} className="report-card p-4 flex flex-col gap-2 hover:border-stone-700 transition-colors">
               <span className="text-2xl">{emoji}</span>

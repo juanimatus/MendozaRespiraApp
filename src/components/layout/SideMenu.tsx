@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   Map, PlusCircle, Info, X, TreeDeciduous,
   LayoutDashboard, ClipboardList, MessageSquareWarning,
-  Search, LogIn, LogOut, Rss,
+  Search, LogIn, LogOut, BarChart3, BadgeCheck,
 } from 'lucide-react';
 import { useAuth, ROLE_LABELS, ROLE_COLORS, ROLE_BADGE } from '@/lib/auth-context';
 
@@ -15,13 +15,14 @@ interface Props { open: boolean; onClose: () => void; }
 const EASE = [0.4, 0, 0.2, 1] as const;
 
 const PUBLIC_LINKS = [
-  { href: '/mapa',     label: 'Mapa de reportes',    icon: Map },
-  { href: '/feed',     label: 'Feed de reportes',    icon: Rss },
+  { href: '/feed',     label: 'Explorar el mapa',    icon: Map },
   { href: '/reportar', label: 'Nuevo reporte',       icon: PlusCircle },
+  { href: '/impacto',  label: 'Impacto y datos',     icon: BarChart3 },
   { href: '/acerca',   label: 'Acerca del proyecto', icon: Info },
 ];
 
 const INSPECTOR_LINKS = [
+  { href: '/revision',   label: 'Revisión técnica', icon: BadgeCheck },
   { href: '/inspector',  label: 'Inspector IA',  icon: Search },
   { href: '/inventario', label: 'Inventario',    icon: ClipboardList },
   { href: '/reclamos',   label: 'Reclamos',      icon: MessageSquareWarning },
@@ -29,6 +30,7 @@ const INSPECTOR_LINKS = [
 
 const ADMIN_LINKS = [
   { href: '/dashboard',  label: 'Dashboard',     icon: LayoutDashboard },
+  { href: '/revision',   label: 'Revisión técnica', icon: BadgeCheck },
   { href: '/inspector',  label: 'Inspector IA',  icon: Search },
   { href: '/inventario', label: 'Inventario',    icon: ClipboardList },
   { href: '/reclamos',   label: 'Reclamos',      icon: MessageSquareWarning },

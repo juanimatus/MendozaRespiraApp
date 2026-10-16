@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Rutas que requieren rol municipal
-const MUNICIPAL_ROUTES = ['/dashboard', '/inventario', '/reclamos', '/inspector'];
+const MUNICIPAL_ROUTES = ['/dashboard', '/inventario', '/reclamos', '/inspector', '/revision'];
 // Rutas exclusivas de admin
 const ADMIN_ROUTES = ['/dashboard'];
 
@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
     const role = profile?.role ?? 'ciudadano';
     if (role === 'ciudadano') {
       // Ciudadano autenticado no puede entrar a rutas municipales
-      return NextResponse.redirect(new URL('/mapa', request.url));
+      return NextResponse.redirect(new URL('/feed', request.url));
     }
     if (ADMIN_ROUTES.some(r => pathname.startsWith(r)) && role !== 'admin') {
       return NextResponse.redirect(new URL('/inspector', request.url));
