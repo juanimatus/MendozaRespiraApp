@@ -80,6 +80,8 @@ export default function ReportarPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: await fileToBase64(file), media_type: file.type }),
       });
+      // 503 = análisis con IA no configurado: el vecino elige el tipo y lo revisa el técnico
+      if (res.status === 503) return;
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Error al analizar');
       const result = data as PhotoAnalysis;

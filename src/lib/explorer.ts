@@ -5,6 +5,7 @@
 
 import { supabase } from './supabase';
 import type { ReportWithVerifications, ReportType, RiskLevel } from '@/types';
+import { riskOf } from '@/types';
 
 export interface MunicipioStats {
   municipio:      string;
@@ -43,7 +44,7 @@ export async function fetchFeedPage(
 
   if (filters.municipios?.length) q = q.in('municipio', filters.municipios as string[]);
   if (filters.types?.length)      q = q.in('type', filters.types as string[]);
-  if (filters.risks?.length)      q = q.in('ai_risk', filters.risks as string[]);
+  if (filters.risks?.length)      q = q.in('risk', filters.risks as string[]);
   if (before)                     q = q.lt('created_at', before);
 
   const { data, error } = await q;
@@ -59,7 +60,7 @@ export async function fetchMapPoints(filters: FeedFilters): Promise<ReportWithVe
     .order('created_at', { ascending: false })
     .limit(2000);
   if (filters.types?.length) q = q.in('type', filters.types as string[]);
-  if (filters.risks?.length) q = q.in('ai_risk', filters.risks as string[]);
+  if (filters.risks?.length) q = q.in('risk', filters.risks as string[]);
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as ReportWithVerifications[];
@@ -68,7 +69,8 @@ export async function fetchMapPoints(filters: FeedFilters): Promise<ReportWithVe
 export function matchesFilters(r: ReportWithVerifications, f: FeedFilters): boolean {
   if (f.municipios?.length && !(r.municipio && f.municipios.includes(r.municipio))) return false;
   if (f.types?.length && !f.types.includes(r.type)) return false;
-  if (f.risks?.length && !(r.ai_risk && f.risks.includes(r.ai_risk))) return false;
+  const risk = riskOf(r);
+  if (f.risks?.length && !(risk && f.risks.includes(risk))) return false;
   return true;
 }
 

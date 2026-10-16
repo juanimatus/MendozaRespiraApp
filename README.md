@@ -123,6 +123,8 @@ En tu proyecto de Supabase → **SQL Editor**, ejecutar en orden:
 3. `supabase/schema-auth.sql` — tabla `profiles` y roles.
 4. `supabase/migrations/004-explorar.sql` — vista `municipio_stats` y Realtime para
    el explorador (`/feed`).
+5. `supabase/migrations/005-revision-tecnica.sql` — revisión técnica de reportes por un
+   ingeniero agrónomo (rol inspector o admin) en `/revision`.
 
 Si tu base ya existía antes de un cambio de schema, corré además las migraciones de
 `supabase/migrations/` en orden (por ejemplo `001-municipio.sql`, que agrega el

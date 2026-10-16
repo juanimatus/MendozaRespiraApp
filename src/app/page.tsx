@@ -12,7 +12,7 @@ const EASE = [0.4, 0, 0.2, 1] as const;
 
 const STEPS = [
   { icon: Camera,   title: 'Sacá una foto',     text: 'Un árbol peligroso, un frente sin árboles, una parada sin sombra o un tocón.' },
-  { icon: Sparkles, title: 'La IA la analiza',  text: 'Estima el riesgo y cuántos árboles faltan, y le sugiere al municipio qué hacer.' },
+  { icon: Sparkles, title: 'Un técnico lo evalúa', text: 'Un ingeniero agrónomo confirma el nivel de riesgo, con ayuda de la IA, para que el municipio sepa qué priorizar.' },
   { icon: Users,    title: 'Los vecinos confirman', text: 'Cada confirmación suma evidencia. Los datos son abiertos para todos.' },
 ];
 
@@ -130,6 +130,11 @@ export default function Home() {
                   ⚙️ Dashboard
                 </Link>
               )}
+              <Link href="/revision"
+                className="py-2 px-3 bg-stone-900 border border-sky-800 hover:border-sky-600
+                           text-xs font-medium text-sky-300 rounded-xl transition-colors text-center">
+                ✅ Revisión técnica
+              </Link>
               <Link href="/inspector"
                 className="py-2 px-3 bg-stone-900 border border-stone-700 hover:border-green-700
                            text-xs font-medium text-stone-300 rounded-xl transition-colors text-center">

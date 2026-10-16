@@ -23,10 +23,20 @@ export interface Report {
   ai_risk: RiskLevel | null;
   ai_summary: string | null;
   ai_analysis: Record<string, unknown> | null;
+  // Revisión técnica (ingeniero agrónomo): su riesgo prevalece sobre el de la IA
+  review_risk?: RiskLevel | null;
+  review_note?: string | null;
+  reviewed_at?: string | null;
 }
 
 export interface ReportWithVerifications extends Report {
   verification_count: number;
+  risk?: RiskLevel | null;      // calculado en la vista: técnico si existe, si no IA
+}
+
+// Riesgo vigente de un reporte (también para filas que llegan en vivo sin la columna calculada)
+export function riskOf(r: Pick<Report, 'ai_risk' | 'review_risk'>): RiskLevel | null {
+  return r.review_risk ?? r.ai_risk ?? null;
 }
 
 export interface Verification {

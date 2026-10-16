@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   Map, PlusCircle, Info, X, TreeDeciduous,
   LayoutDashboard, ClipboardList, MessageSquareWarning,
-  Search, LogIn, LogOut, BarChart3,
+  Search, LogIn, LogOut, BarChart3, BadgeCheck,
 } from 'lucide-react';
 import { useAuth, ROLE_LABELS, ROLE_COLORS, ROLE_BADGE } from '@/lib/auth-context';
 
@@ -22,6 +22,7 @@ const PUBLIC_LINKS = [
 ];
 
 const INSPECTOR_LINKS = [
+  { href: '/revision',   label: 'Revisión técnica', icon: BadgeCheck },
   { href: '/inspector',  label: 'Inspector IA',  icon: Search },
   { href: '/inventario', label: 'Inventario',    icon: ClipboardList },
   { href: '/reclamos',   label: 'Reclamos',      icon: MessageSquareWarning },
@@ -29,6 +30,7 @@ const INSPECTOR_LINKS = [
 
 const ADMIN_LINKS = [
   { href: '/dashboard',  label: 'Dashboard',     icon: LayoutDashboard },
+  { href: '/revision',   label: 'Revisión técnica', icon: BadgeCheck },
   { href: '/inspector',  label: 'Inspector IA',  icon: Search },
   { href: '/inventario', label: 'Inventario',    icon: ClipboardList },
   { href: '/reclamos',   label: 'Reclamos',      icon: MessageSquareWarning },

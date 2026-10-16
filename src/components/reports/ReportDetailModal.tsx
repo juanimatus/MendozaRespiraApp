@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { X, CheckCircle, Clock, Users } from 'lucide-react';
+import { X, CheckCircle, Clock, Users, BadgeCheck } from 'lucide-react';
 
 import { verifyReport, hasVerified } from '@/lib/reports';
 import type { ReportWithVerifications } from '@/types';
@@ -127,10 +127,27 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             </time>
           </div>
 
+          {/* Revisión técnica */}
+          {report.reviewed_at && (
+            <div className="rounded-xl border border-sky-900/60 bg-sky-950/30 p-3 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <BadgeCheck className="w-4 h-4 text-sky-400" />
+                <span className="text-xs font-semibold text-sky-300">Revisado por ingeniero agrónomo</span>
+                {report.review_risk && (
+                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                    style={{ backgroundColor: RISK_COLORS[report.review_risk] }}>
+                    {RISK_LABELS[report.review_risk]}
+                  </span>
+                )}
+              </div>
+              {report.review_note && <p className="text-sm text-stone-300">{report.review_note}</p>}
+            </div>
+          )}
+
           {/* Análisis IA */}
           {report.ai_summary && (
             <div className="rounded-xl bg-stone-800/60 p-3 space-y-1.5">
-              {report.ai_risk && (
+              {report.ai_risk && !report.reviewed_at && (
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
                   style={{ backgroundColor: RISK_COLORS[report.ai_risk] }}>
                   {RISK_LABELS[report.ai_risk]}

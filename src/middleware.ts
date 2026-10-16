@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Rutas que requieren rol municipal
-const MUNICIPAL_ROUTES = ['/dashboard', '/inventario', '/reclamos', '/inspector'];
+const MUNICIPAL_ROUTES = ['/dashboard', '/inventario', '/reclamos', '/inspector', '/revision'];
 // Rutas exclusivas de admin
 const ADMIN_ROUTES = ['/dashboard'];
 

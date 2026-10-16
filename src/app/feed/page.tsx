@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence, animate } from 'motion/react';
-import { TreeDeciduous, Menu, MapPin, CheckCircle, Clock, X, Plus, AlertTriangle } from 'lucide-react';
+import { TreeDeciduous, Menu, MapPin, CheckCircle, Clock, X, Plus, AlertTriangle, BadgeCheck } from 'lucide-react';
 
 import SideMenu from '@/components/layout/SideMenu';
 import ReportDetailModal from '@/components/reports/ReportDetailModal';
@@ -16,7 +16,7 @@ import {
   FEED_PAGE_SIZE, type FeedFilters, type MunicipioStats,
 } from '@/lib/explorer';
 import type { ReportWithVerifications, ReportType } from '@/types';
-import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, RISK_LABELS, RISK_COLORS } from '@/types';
+import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, RISK_LABELS, RISK_COLORS, riskOf } from '@/types';
 
 // Leaflet no funciona en SSR
 const ExplorerMap = dynamic(() => import('@/components/explorer/ExplorerMap'), {
@@ -67,6 +67,7 @@ function FeedCard({ r, isNew, onHover, onOpen }: {
   r: ReportWithVerifications; isNew: boolean;
   onHover: (id: string | null) => void; onOpen: () => void;
 }) {
+  const risk = riskOf(r);
   return (
     <motion.button layout
       initial={{ opacity: 0, y: isNew ? -12 : 8 }} animate={{ opacity: 1, y: 0 }}
@@ -87,16 +88,21 @@ function FeedCard({ r, isNew, onHover, onOpen }: {
             style={{ backgroundColor: REPORT_TYPE_COLORS[r.type] }}>
             {REPORT_TYPE_LABELS[r.type]}
           </span>
-          {r.ai_risk && r.ai_risk !== 'ninguna' && (
+          {risk && risk !== 'ninguna' && (
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white"
-              style={{ backgroundColor: RISK_COLORS[r.ai_risk] }}>
-              {RISK_LABELS[r.ai_risk]}
+              style={{ backgroundColor: RISK_COLORS[risk] }}>
+              {RISK_LABELS[risk]}
+            </span>
+          )}
+          {r.reviewed_at && (
+            <span className="flex items-center gap-1 text-[11px] font-medium text-sky-300">
+              <BadgeCheck className="w-3 h-3" /> Revisado
             </span>
           )}
           {isNew && <span className="text-[11px] font-semibold text-green-400">Nuevo</span>}
         </div>
         <p className="text-sm text-stone-300 line-clamp-2">
-          {r.ai_summary ?? r.comment ?? 'Sin descripción'}
+          {r.review_note ?? r.ai_summary ?? r.comment ?? 'Sin descripción'}
         </p>
         <div className="flex items-center gap-3 text-[11px] text-stone-500">
           <span className="flex items-center gap-1 truncate">
