@@ -125,6 +125,7 @@ En tu proyecto de Supabase → **SQL Editor**, ejecutar en orden:
    el explorador (`/feed`).
 5. `supabase/migrations/005-revision-tecnica.sql` — revisión técnica de reportes por un
    ingeniero agrónomo (rol inspector o admin) en `/revision`.
+6. `supabase/migrations/006-tipos-rama-seco.sql` — tipos de reporte "Rama peligrosa" y "Árbol seco".
 
 Si tu base ya existía antes de un cambio de schema, corré además las migraciones de
 `supabase/migrations/` en orden (por ejemplo `001-municipio.sql`, que agrega el

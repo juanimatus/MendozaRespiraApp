@@ -14,8 +14,8 @@ import { reportTypeFor, type PhotoAnalysis } from '@/lib/photo-analysis';
 import { MUNICIPIOS, reverseGeocode } from '@/lib/municipios';
 
 const TYPES: ReportType[] = [
-  'arbol_peligroso', 'falta_frentista', 'parada_sin_arbol',
-  'tocon', 'arbol_talado', 'sospecha',
+  'arbol_peligroso', 'rama_peligrosa', 'arbol_seco', 'falta_frentista',
+  'parada_sin_arbol', 'tocon', 'arbol_talado', 'sospecha',
 ];
 const EASE = [0.4, 0, 0.2, 1] as const;
 
@@ -333,7 +333,7 @@ export default function ReportarPage() {
           <label className="text-sm font-medium text-stone-300">
             Tipo de reporte <span className="text-red-400">*</span>
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {TYPES.map((t) => (
               <motion.button
                 key={t}

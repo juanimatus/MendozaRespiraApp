@@ -4,7 +4,8 @@
 
 export type ReportType =
   | 'tocon' | 'arbol_talado' | 'sospecha'
-  | 'arbol_peligroso' | 'falta_frentista' | 'parada_sin_arbol';
+  | 'arbol_peligroso' | 'falta_frentista' | 'parada_sin_arbol'
+  | 'rama_peligrosa' | 'arbol_seco';
 export type RiskLevel = 'ninguna' | 'baja' | 'media' | 'alta' | 'critica';
 export type ReportStatus = 'pending' | 'verified';
 
@@ -54,6 +55,8 @@ export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   arbol_peligroso:  'Árbol peligroso',
   falta_frentista:  'Faltan árboles en el frente',
   parada_sin_arbol: 'Parada sin árbol',
+  rama_peligrosa:   'Rama peligrosa',
+  arbol_seco:       'Árbol seco',
 };
 
 export const REPORT_TYPE_COLORS: Record<ReportType, string> = {
@@ -63,6 +66,8 @@ export const REPORT_TYPE_COLORS: Record<ReportType, string> = {
   arbol_peligroso:  '#dc2626', // rojo intenso
   falta_frentista:  '#0ea5e9', // celeste
   parada_sin_arbol: '#14b8a6', // turquesa
+  rama_peligrosa:   '#e11d48', // rosa intenso
+  arbol_seco:       '#a16207', // marrón
 };
 
 export const RISK_LABELS: Record<RiskLevel, string> = {

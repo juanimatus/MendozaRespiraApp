@@ -7,7 +7,9 @@ import { z } from 'zod';
 
 export const PhotoAnalysisSchema = z.object({
   categoria: z.enum([
-    'arbol_peligroso',     // riesgo de caída, ramas secas, inclinación, raíces levantadas, cables
+    'arbol_peligroso',     // riesgo de caída del árbol: inclinación, tronco dañado, raíces levantadas, cables
+    'rama_peligrosa',      // una o más ramas secas, quebradas o colgando con riesgo de caer
+    'arbol_seco',          // árbol muerto o casi sin follaje vivo
     'falta_frentista',     // frente de propiedad sin árboles o con menos de los exigidos
     'parada_sin_arbol',    // parada de colectivo sin sombra de árboles
     'tocon',

@@ -11,6 +11,8 @@ import type { PhotoAnalysis } from './photo-analysis-schema';
 export function reportTypeFor(categoria: PhotoAnalysis['categoria']): ReportType | null {
   switch (categoria) {
     case 'arbol_peligroso':
+    case 'rama_peligrosa':
+    case 'arbol_seco':
     case 'falta_frentista':
     case 'parada_sin_arbol':
     case 'tocon':

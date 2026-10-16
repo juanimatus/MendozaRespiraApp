@@ -35,6 +35,7 @@ Lo que más importa, en este orden:
 1. Peligrosidad: riesgo de caída del árbol o de ramas (ramas secas o quebradas, tronco ahuecado o con pudrición, inclinación marcada, raíces levantadas, árbol sobre cables, edificios o calzada).
 2. Faltantes: frentes sin árboles o con menos de dos, paradas de colectivo sin árbol, tocones o espacios vacíos en la línea de arbolado. Estimá cuántos árboles faltan para cumplir.
 3. Tala: tocones recientes, árboles talados o indicios de tala o anillado en curso.
+Para la categoría: si el problema es una rama puntual usá rama_peligrosa; si el árbol entero está muerto o casi sin follaje vivo, arbol_seco; si el riesgo es del árbol completo (inclinación, tronco, raíces), arbol_peligroso.
 La especie es secundaria: informala solo si la reconocés, con tu confianza real, y dejala en null si no.
 
 Basate solo en lo que se ve. Si la foto no permite juzgar algo, decilo en los motivos en lugar de suponer. Si la foto no muestra arbolado urbano, usá la categoría no_es_arbolado.

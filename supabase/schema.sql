@@ -23,7 +23,8 @@ create table public.reports (
   -- Contenido
   type          text not null check (type in (
                   'tocon', 'arbol_talado', 'sospecha',
-                  'arbol_peligroso', 'falta_frentista', 'parada_sin_arbol')),
+                  'arbol_peligroso', 'falta_frentista', 'parada_sin_arbol',
+                  'rama_peligrosa', 'arbol_seco')),
   comment       text,
   photo_url     text not null,               -- URL pública de Supabase Storage
 
