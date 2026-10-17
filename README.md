@@ -142,6 +142,7 @@ Editar `.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...tu_anon_key...
+NEXT_PUBLIC_CARTO_KEY=tu_key_de_carto   # mapas base, gratis en carto.com/basemaps/apikey
 ```
 
 ### 5. Correr localmente
