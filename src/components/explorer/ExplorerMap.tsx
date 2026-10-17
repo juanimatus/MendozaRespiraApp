@@ -27,6 +27,10 @@ interface Props {
   onSelectReport:   (report: ReportWithVerifications) => void;
 }
 
+// CARTO exige key para sus mapas base desde sept. 2026 (gratis en carto.com/basemaps/apikey)
+const CARTO_KEY = process.env.NEXT_PUBLIC_CARTO_KEY;
+const TILES_URL = `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png${CARTO_KEY ? `?key=${CARTO_KEY}` : ''}`;
+
 type UnitFeature = Feature<Geometry, { nombre: string }>;
 
 // Créditos del mapa (obligatorios por licencia de OpenStreetMap y CARTO):
@@ -123,9 +127,7 @@ export default function ExplorerMap({
       zoomControl={false}
       attributionControl={false}
     >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      />
+      <TileLayer url={TILES_URL} />
       <FitTo geo={geo} unit={selectedUnit} />
 
       {/* Los departamentos van en un panel debajo de los puntos */}
