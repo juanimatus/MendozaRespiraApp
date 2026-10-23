@@ -29,16 +29,50 @@ interface Props {
 
 type UnitFeature = Feature<Geometry, { nombre: string }>;
 
-// Créditos del mapa (obligatorios por licencia de OpenStreetMap y CARTO):
+// Mapas base sin API key ni marca de agua (Esri). Se elige con
+// NEXT_PUBLIC_MAP_BASE=oscuro|satelite; el usuario puede alternar en el mapa.
+const BASEMAPS = {
+  oscuro: {
+    label: 'Mapa',
+    url:   'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    maxNativeZoom: 16,
+  },
+  satelite: {
+    label: 'Satélite',
+    url:   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    maxNativeZoom: 18,
+  },
+} as const;
+type Basemap = keyof typeof BASEMAPS;
+const DEFAULT_BASEMAP: Basemap =
+  process.env.NEXT_PUBLIC_MAP_BASE === 'satelite' ? 'satelite' : 'oscuro';
+
+function Toggle<T extends string>({ value, options, onChange }: {
+  value: T; options: [T, string][]; onChange: (v: T) => void;
+}) {
+  return (
+    <div className="flex rounded-xl border border-stone-700 bg-stone-950/90 p-0.5 text-xs">
+      {options.map(([v, label]) => (
+        <button key={v} onClick={() => onChange(v)}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${value === v ? 'bg-stone-100 text-stone-900 font-medium' : 'text-stone-400 hover:text-stone-200'}`}>
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Créditos del mapa (obligatorios por licencia de Esri):
 // plegados en un botón "i" para que no tapen el mapa
 function Credits() {
   const [open, setOpen] = useState(false);
   return (
-    <div className="absolute top-3 right-3 z-[999] flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5">
       {open && (
-        <span className="rounded-lg bg-stone-950/90 border border-stone-700 px-2 py-1 text-[10px] text-stone-400 [&_a]:text-stone-300 [&_a:hover]:underline">
-          © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>
-          {' '}© <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a> · {REGION.attribution}
+        <span className="rounded-lg bg-stone-950/90 border border-stone-700 px-2 py-1 text-[10px] text-stone-400">
+          Mapa base © Esri y colaboradores · {REGION.attribution}
         </span>
       )}
       <button onClick={() => setOpen(o => !o)} aria-label="Créditos del mapa" aria-expanded={open}
@@ -50,17 +84,19 @@ function Credits() {
 }
 
 // Encuadra la región o el departamento elegido
-function FitTo({ geo, unit }: { geo: FeatureCollection | null; unit: string | null }) {
+// (sin departamento elegido: la zona foco o toda la región)
+function FitTo({ geo, unit, focus }: { geo: FeatureCollection | null; unit: string | null; focus: boolean }) {
   const map = useMap();
   useEffect(() => {
     if (!geo) return;
-    const features = unit
-      ? geo.features.filter(f => (f as UnitFeature).properties.nombre === unit)
+    const names = unit ? [unit] : focus ? REGION.focus.units : null;
+    const features = names
+      ? geo.features.filter(f => names.includes((f as UnitFeature).properties.nombre))
       : geo.features;
     if (!features.length) return;
     const bounds = L.geoJSON({ type: 'FeatureCollection', features } as FeatureCollection).getBounds();
     map.flyToBounds(bounds, { padding: [24, 24], duration: 0.6 });
-  }, [geo, unit, map]);
+  }, [geo, unit, focus, map]);
   return null;
 }
 
@@ -69,6 +105,8 @@ export default function ExplorerMap({
 }: Props) {
   const [geo, setGeo] = useState<FeatureCollection | null>(null);
   const [hoveredUnit, setHoveredUnit] = useState<string | null>(null);
+  const [basemap, setBasemap] = useState<Basemap>(DEFAULT_BASEMAP);
+  const [focus, setFocus] = useState(true);
   const layerRef = useRef<L.GeoJSON | null>(null);
   const handlers = useRef({ onSelectUnit, selectedUnit });
   handlers.current = { onSelectUnit, selectedUnit };
@@ -123,10 +161,14 @@ export default function ExplorerMap({
       zoomControl={false}
       attributionControl={false}
     >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      />
-      <FitTo geo={geo} unit={selectedUnit} />
+      <TileLayer key={basemap} url={BASEMAPS[basemap].url}
+        maxNativeZoom={BASEMAPS[basemap].maxNativeZoom} maxZoom={19} />
+      {/* Nombres de calles y localidades por encima de los departamentos */}
+      <Pane name="labels" style={{ zIndex: 380, pointerEvents: 'none' }}>
+        <TileLayer key={`${basemap}-labels`} url={BASEMAPS[basemap].labels}
+          maxNativeZoom={BASEMAPS[basemap].maxNativeZoom} maxZoom={19} />
+      </Pane>
+      <FitTo geo={geo} unit={selectedUnit} focus={focus} />
 
       {/* Los departamentos van en un panel debajo de los puntos */}
       <Pane name="choropleth" style={{ zIndex: 350 }}>
@@ -158,12 +200,12 @@ export default function ExplorerMap({
           <CircleMarker
             key={r.id}
             center={[r.lat, r.lng]}
-            radius={highlighted ? 10 : 5}
+            radius={highlighted ? 11 : 7}
             pathOptions={{
-              color:       highlighted ? '#fafaf9' : REPORT_TYPE_COLORS[r.type],
+              color:       highlighted ? '#fafaf9' : '#0c0a09',
               fillColor:   REPORT_TYPE_COLORS[r.type],
-              fillOpacity: inScope ? 0.9 : 0.25,
-              weight:      highlighted ? 3 : 1,
+              fillOpacity: inScope ? 0.95 : 0.25,
+              weight:      highlighted ? 3 : 1.5,
               opacity:     inScope ? 1 : 0.3,
             }}
             eventHandlers={{ click: () => onSelectReport(r) }}
@@ -175,7 +217,13 @@ export default function ExplorerMap({
         );
       })}
     </MapContainer>
-    <Credits />
+    <div className="absolute top-3 right-3 z-[999] flex flex-col items-end gap-1.5">
+      <Credits />
+      <Toggle value={basemap} onChange={setBasemap}
+        options={(Object.keys(BASEMAPS) as Basemap[]).map(b => [b, BASEMAPS[b].label])} />
+      <Toggle value={focus ? 'focus' : 'all'} onChange={v => { setFocus(v === 'focus'); onSelectUnit(null); }}
+        options={[['focus', REGION.focus.label], ['all', REGION.name]]} />
+    </div>
     </div>
   );
 }
