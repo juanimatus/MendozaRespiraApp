@@ -221,7 +221,7 @@ export default function ExplorerMap({
             eventHandlers={{ click: () => onSelectReport(r) }}
           >
             <Tooltip direction="top" offset={[0, -6]}>
-              {REPORT_TYPE_LABELS[r.type]}{r.address ? ` · ${r.address}` : ''}
+              {REPORT_TYPE_LABELS[r.type]}{r.municipio ? ` · ${r.municipio}` : ''}
             </Tooltip>
           </CircleMarker>
         );

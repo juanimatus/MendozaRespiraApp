@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { X, CheckCircle, Clock, Users, BadgeCheck, Send, Inbox, Wrench } from 'lucide-react';
+import { X, CheckCircle, Clock, Users, BadgeCheck, Send, Inbox, Wrench, MapPin } from 'lucide-react';
 
 import { verifyReport, hasVerified, isRateLimited, RATE_LIMIT_MESSAGE } from '@/lib/reports';
 import type { ReportWithVerifications } from '@/types';
@@ -202,15 +202,12 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             </p>
           )}
 
-          {/* Ubicación */}
-          {(report.address || report.municipio) && (
-            <p className="text-sm text-stone-400">
-              {[report.address, report.municipio].filter(Boolean).join(' · ')}
+          {/* Solo el departamento: la dirección y las coordenadas quedan para el técnico (privacidad del vecino) */}
+          {report.municipio && (
+            <p className="flex items-center gap-1.5 text-sm text-stone-400">
+              <MapPin className="w-4 h-4" /> {report.municipio}
             </p>
           )}
-          <p className="text-xs text-stone-600 font-mono">
-            {report.lat.toFixed(5)}, {report.lng.toFixed(5)}
-          </p>
 
           {/* Línea de tiempo del caso */}
           <Timeline report={report} count={count} />
