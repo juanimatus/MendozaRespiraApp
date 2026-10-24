@@ -18,6 +18,7 @@ export interface RegionConfig {
   bounds:      [[number, number], [number, number]];   // [[sur, oeste], [norte, este]]
   units:       readonly string[];
   zones:       Record<string, readonly string[]>;
+  focus:       { label: string; units: readonly string[] };   // encuadre inicial del mapa
 }
 
 export const MENDOZA: RegionConfig = {
@@ -32,6 +33,7 @@ export const MENDOZA: RegionConfig = {
   bounds:      [[-37.6, -70.6], [-32.0, -66.45]],
   units:       MUNICIPIOS,
   zones:       ZONAS,
+  focus:       { label: 'Zona Este', units: ZONAS['Zona Este'] },
 };
 
 export const REGION = MENDOZA;

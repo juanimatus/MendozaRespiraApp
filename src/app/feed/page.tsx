@@ -131,6 +131,7 @@ export default function ExplorarPage() {
   const [types, setTypes]               = useState<ReportType[]>([]);
   const [onlyHighRisk, setOnlyHighRisk] = useState(false);
   const [metric, setMetric]             = useState<Metric>('total');
+  const [byUnit, setByUnit]             = useState(true);
 
   // Datos
   const [stats, setStats]       = useState<Map<string, MunicipioStats>>(new Map());
@@ -259,7 +260,7 @@ export default function ExplorarPage() {
         {/* ── Mapa ─────────────────────────────────────────────── */}
         <section className="relative h-[42dvh] lg:h-auto shrink-0 border-b lg:border-b-0 lg:border-r border-stone-800">
           <ExplorerMap
-            stats={stats} metric={metric} points={points}
+            stats={stats} metric={metric} byUnit={byUnit} points={points}
             selectedUnit={selectedUnit} highlightedId={highlightedId}
             onSelectUnit={selectUnit} onSelectReport={setSelected}
           />
@@ -267,14 +268,23 @@ export default function ExplorarPage() {
           {/* Métrica del coloreado */}
           <div className="absolute top-3 left-3 z-[999] flex rounded-xl border border-stone-700 bg-stone-950/90 p-0.5 text-xs">
             {(Object.keys(METRIC_LABELS) as Metric[]).map(m => (
-              <button key={m} onClick={() => setMetric(m)}
-                className={`px-2.5 py-1 rounded-lg transition-colors ${metric === m ? 'bg-stone-100 text-stone-900 font-medium' : 'text-stone-400 hover:text-stone-200'}`}>
+              <button key={m} onClick={() => { setMetric(m); setByUnit(false); }}
+                className={`px-2.5 py-1 rounded-lg transition-colors ${!byUnit && metric === m ? 'bg-stone-100 text-stone-900 font-medium' : 'text-stone-400 hover:text-stone-200'}`}>
                 {METRIC_LABELS[m]}
               </button>
             ))}
+            <button onClick={() => setByUnit(true)}
+              className={`px-2.5 py-1 rounded-lg transition-colors ${byUnit ? 'bg-stone-100 text-stone-900 font-medium' : 'text-stone-400 hover:text-stone-200'}`}>
+              Deptos.
+            </button>
           </div>
 
           {/* Leyenda */}
+          {byUnit ? (
+          <div className="absolute bottom-6 left-3 z-[999] rounded-xl border border-stone-700 bg-stone-950/90 px-2.5 py-1.5 text-[10px] text-stone-300">
+            {selectedUnit ?? `Tocá un ${REGION.unitLabel} para resaltarlo`}
+          </div>
+          ) : (
           <div className="absolute bottom-6 left-3 z-[999] flex items-center gap-2 rounded-xl border border-stone-700 bg-stone-950/90 px-2.5 py-1.5 text-[10px] text-stone-400">
             <span>Menos</span>
             <span className="flex">
@@ -285,6 +295,7 @@ export default function ExplorarPage() {
               <span className="h-2.5 w-3.5 rounded-sm border border-dashed border-stone-500" /> Sin reportes
             </span>
           </div>
+          )}
 
           <Link href="/reportar"
             className="absolute right-3 z-[999] flex items-center gap-1.5 bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-2xl shadow-lg shadow-black/40 transition-colors"
