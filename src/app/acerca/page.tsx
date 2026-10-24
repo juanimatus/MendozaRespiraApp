@@ -9,7 +9,7 @@ const EASE = [0.4, 0, 0.2, 1] as const;
 
 const STEPS = [
   { icon: Camera,  title: 'Sacá una foto',       text: 'De un árbol peligroso, un frente sin árboles, un espacio para plantar o un tocón.' },
-  { icon: MapPin,  title: 'Capturá tu ubicación', text: 'El GPS de tu celular marca el punto exacto.' },
+  { icon: MapPin,  title: 'Marcá el lugar', text: 'Buscá la dirección o tocá el mapa donde está el árbol.' },
   { icon: Users,   title: 'La comunidad valida',  text: 'Otros vecinos pueden confirmar que el reporte existe.' },
 ];
 

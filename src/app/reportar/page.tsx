@@ -5,14 +5,15 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'motion/react';
-import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle } from 'lucide-react';
+import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle, Search } from 'lucide-react';
 
 import { createReport, isRateLimited, RATE_LIMIT_MESSAGE } from '@/lib/reports';
 import type { ReportType } from '@/types';
 import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS } from '@/types';
 import { downscaleImage, fileToBase64 } from '@/lib/image';
 import type { PhotoAnalysis } from '@/lib/photo-analysis';
-import { MUNICIPIOS, reverseGeocode } from '@/lib/municipios';
+import { MUNICIPIOS, reverseGeocode, searchAddress, type PlaceResult } from '@/lib/municipios';
+import { REGION } from '@/config/region';
 
 const LocationPicker = dynamic(() => import('@/components/reportar/LocationPicker'), {
   ssr: false,
@@ -65,8 +66,9 @@ export default function ReportarPage() {
   const [photo, setPhoto]         = useState<File | null>(null);
   const [photoPreview, setPreview] = useState<string | null>(null);
   const [location, setLocation]   = useState<{ lat: number; lng: number } | null>(null);
-  const [gpsOrigin, setGpsOrigin] = useState<{ lat: number; lng: number } | null>(null);
-  const [locError, setLocError]   = useState<string | null>(null);
+  const [query, setQuery]         = useState('');
+  const [results, setResults]     = useState<PlaceResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
   const [municipio, setMunicipio] = useState<string>('');
   const [address, setAddress]     = useState<string | null>(null);
   const [geocoding, setGeocoding] = useState(false);
@@ -106,7 +108,7 @@ export default function ReportarPage() {
     }
   }
 
-  // Fija el punto y detecta el departamento (lo usan el GPS y el mapa)
+  // Fija el punto y detecta el departamento (lo usan la búsqueda y el mapa)
   const applyLocation = useCallback((loc: { lat: number; lng: number }) => {
     setLocation(loc);
     setGeocoding(true);
@@ -119,26 +121,20 @@ export default function ReportarPage() {
       .finally(() => setGeocoding(false));
   }, []);
 
-  // ── Geolocalización ──────────────────────────────────────────────────
-  const getLocation = useCallback(() => {
-    setLocError(null);
-    if (!navigator.geolocation) {
-      setLocError('Tu navegador no soporta geolocalización.');
-      return;
+  // ── Búsqueda de dirección (sin GPS: el vecino marca el lugar del árbol) ──
+  async function handleSearch() {
+    const q = query.trim();
+    if (q.length < 3) return;
+    setSearching(true);
+    try {
+      setResults(await searchAddress(q, REGION.bounds));
+    } catch (err) {
+      console.warn('Búsqueda de dirección falló', err);
+      setResults([]);
+    } finally {
+      setSearching(false);
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setGpsOrigin(loc);
-        applyLocation(loc);
-      },
-      (err) => {
-        console.error(err);
-        setLocError('No se pudo obtener la ubicación. Habilitá el GPS e intentá de nuevo.');
-      },
-      { enableHighAccuracy: true, timeout: 10_000 }
-    );
-  }, [applyLocation]);
+  }
 
   // ── Envío ─────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
@@ -150,8 +146,6 @@ export default function ReportarPage() {
       const id = await createReport({
         lat:     location.lat,
         lng:     location.lng,
-        gpsLat:  gpsOrigin?.lat ?? location.lat,
-        gpsLng:  gpsOrigin?.lng ?? location.lng,
         type,
         comment: comment.trim() || undefined,
         municipio: municipio || null,
@@ -343,63 +337,49 @@ export default function ReportarPage() {
           className="space-y-2"
         >
           <label className="text-sm font-medium text-stone-300">
-            Ubicación GPS <span className="text-red-400">*</span>
+            ¿Dónde está el árbol? <span className="text-red-400">*</span>
           </label>
+          <p className="text-xs text-stone-500">Buscá la dirección o tocá el mapa en el lugar exacto. Podés arrastrar el pin para ajustarlo.</p>
 
-          <AnimatePresence mode="wait">
-            {location ? (
-              <motion.div
-                key="located"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.15, ease: EASE }}
-                className="flex items-center gap-3 bg-green-900/30 border border-green-800/50
-                          rounded-xl px-4 py-3"
-              >
-                <MapPin className="w-4 h-4 text-green-400 shrink-0" />
-                <div className="text-sm">
-                  <p className="text-green-300 font-medium">Ubicación capturada</p>
-                  <p className="text-green-600 font-mono text-xs mt-0.5">
-                    {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={getLocation}
-                  className="ml-auto text-xs text-green-500 hover:text-green-300"
-                >
-                  Actualizar GPS
-                </button>
-              </motion.div>
+          <div className="flex gap-2">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearch(); } }}
+              placeholder="Calle y altura, o esquina"
+              className="form-input py-2 text-sm"
+            />
+            <button type="button" onClick={handleSearch} disabled={searching || query.trim().length < 3}
+              className="shrink-0 flex items-center gap-1.5 px-3 rounded-xl bg-stone-800 border border-stone-700 text-sm text-stone-200 hover:border-green-700 disabled:opacity-50">
+              {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              Buscar
+            </button>
+          </div>
+
+          {results && (
+            results.length === 0 ? (
+              <p className="text-xs text-stone-500">No encontramos esa dirección. Marcá el punto directamente en el mapa.</p>
             ) : (
-              <motion.button
-                key="locate"
-                type="button"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.15, ease: EASE }}
-                whileTap={{ scale: 0.98 }}
-                onClick={getLocation}
-                className="w-full flex items-center justify-center gap-2
-                           bg-stone-900 border border-stone-700 hover:border-green-700
-                           text-stone-300 hover:text-green-400
-                           rounded-xl py-3 text-sm font-medium transition-colors duration-150"
-              >
-                <MapPin className="w-4 h-4" />
-                Capturar mi ubicación
-              </motion.button>
-            )}
-          </AnimatePresence>
+              <ul className="rounded-xl border border-stone-800 divide-y divide-stone-800 overflow-hidden">
+                {results.map((r) => (
+                  <li key={`${r.lat},${r.lng}`}>
+                    <button type="button"
+                      onClick={() => { applyLocation({ lat: r.lat, lng: r.lng }); setResults(null); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-stone-300 bg-stone-900 hover:bg-stone-800">
+                      <MapPin className="w-3.5 h-3.5 shrink-0 text-stone-500" /> <span className="truncate">{r.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )
+          )}
+
+          <LocationPicker value={location} onChange={applyLocation} />
 
           {location && (
-            <div className="space-y-1.5">
-              <p className="text-xs text-stone-400">
-                Movés el pin o tocás el mapa para marcar el árbol exacto (puede estar lejos de donde sacaste la foto).
-              </p>
-              <LocationPicker value={location} onChange={applyLocation} />
-            </div>
+            <p className="flex items-center gap-1.5 text-xs text-green-400">
+              <CheckCircle className="w-3.5 h-3.5" /> Punto marcado. Arrastrá el pin si querés ajustarlo.
+            </p>
           )}
 
           {location && (
@@ -417,17 +397,6 @@ export default function ReportarPage() {
             </div>
           )}
 
-          {locError && (
-            <motion.p
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              transition={{ duration: 0.15, ease: EASE }}
-              className="text-xs text-red-400 bg-red-900/20 border border-red-800/40
-                        rounded-lg px-3 py-2"
-            >
-              {locError}
-            </motion.p>
-          )}
         </motion.section>
 
         {/* ── 4. Comentario ─────────────────────────────────────────── */}
