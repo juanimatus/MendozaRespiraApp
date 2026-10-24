@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { X, CheckCircle, Clock, Users, BadgeCheck } from 'lucide-react';
+import { X, CheckCircle, Clock, Users, BadgeCheck, Send, Inbox, Wrench } from 'lucide-react';
 
 import { verifyReport, hasVerified, isRateLimited, RATE_LIMIT_MESSAGE } from '@/lib/reports';
 import type { ReportWithVerifications } from '@/types';
@@ -22,6 +22,71 @@ function formatDate(iso: string) {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
+}
+
+function shortDate(iso: string) {
+  return new Date(iso).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+// Línea de tiempo del caso, armada con los datos que ya tiene el reporte
+function Timeline({ report, count }: { report: ReportWithVerifications; count: number }) {
+  const steps: { icon: typeof Send; title: string; detail: React.ReactNode; date?: string; done: boolean }[] = [
+    { icon: Send, title: 'Reporte enviado', done: true, date: report.created_at,
+      detail: `Un vecino lo reportó${report.municipio ? ` en ${report.municipio}` : ''}.` },
+    { icon: Inbox, title: 'Recibido por el municipio', done: true, date: report.created_at,
+      detail: 'Quedó registrado y en la bandeja del técnico.' },
+    { icon: Users, title: 'Confirmado por vecinos', done: count > 0,
+      detail: count > 0
+        ? `${count} ${count === 1 ? 'vecino confirmó' : 'vecinos confirmaron'} que existe.`
+        : 'Esperando que otro vecino lo confirme.' },
+    { icon: BadgeCheck, title: 'Revisado por el ingeniero agrónomo', done: !!report.reviewed_at,
+      date: report.reviewed_at ?? undefined,
+      detail: report.reviewed_at ? (
+        <span className="space-y-1 block">
+          {report.review_risk && (
+            <span className="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: RISK_COLORS[report.review_risk] }}>
+              {RISK_LABELS[report.review_risk]}
+            </span>
+          )}
+          {report.review_note && <span className="block">{report.review_note}</span>}
+        </span>
+      ) : 'En revisión.' },
+    { icon: Wrench, title: 'Intervención', done: false,
+      detail: 'El municipio programa la poda, extracción o plantación.' },
+  ];
+  const current = steps.findIndex(s => !s.done);
+
+  return (
+    <ol className="pt-1">
+      {steps.map((step, i) => {
+        const Icon = step.icon;
+        const last = i === steps.length - 1;
+        return (
+          <li key={step.title} className="relative flex gap-3 pb-4 last:pb-0">
+            {!last && (
+              <span className={`absolute left-[13px] top-7 bottom-0 w-px ${step.done && steps[i + 1].done ? 'bg-green-700' : 'bg-stone-800'}`} />
+            )}
+            <span className={`relative z-10 w-7 h-7 shrink-0 rounded-full flex items-center justify-center border
+              ${step.done ? 'bg-green-900/60 border-green-700 text-green-400'
+                : i === current ? 'bg-stone-900 border-amber-600 text-amber-400'
+                : 'bg-stone-900 border-stone-700 text-stone-600'}`}>
+              <Icon className="w-3.5 h-3.5" />
+            </span>
+            <div className="min-w-0 flex-1 pt-0.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className={`text-sm font-medium ${step.done ? 'text-stone-200' : i === current ? 'text-amber-300' : 'text-stone-500'}`}>
+                  {step.title}
+                </p>
+                {step.date && <time className="text-[11px] text-stone-500 shrink-0">{shortDate(step.date)}</time>}
+              </div>
+              <div className={`text-xs ${step.done ? 'text-stone-400' : 'text-stone-500'}`}>{step.detail}</div>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 
 export default function ReportDetailModal({ report, onClose, onVerified }: Props) {
@@ -77,8 +142,8 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 16, scale: 0.98 }}
         transition={{ duration: 0.2, ease: EASE }}
-        className="w-full sm:max-w-sm bg-stone-950 border border-stone-800
-                   rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl"
+        className="w-full sm:max-w-sm max-h-[92dvh] overflow-y-auto bg-stone-950 border border-stone-800
+                   rounded-t-3xl sm:rounded-2xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Foto */}
@@ -130,23 +195,6 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             </time>
           </div>
 
-          {/* Revisión técnica */}
-          {report.reviewed_at && (
-            <div className="rounded-xl border border-sky-900/60 bg-sky-950/30 p-3 space-y-1.5">
-              <div className="flex items-center gap-2">
-                <BadgeCheck className="w-4 h-4 text-sky-400" />
-                <span className="text-xs font-semibold text-sky-300">Revisado por ingeniero agrónomo</span>
-                {report.review_risk && (
-                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full text-white"
-                    style={{ backgroundColor: RISK_COLORS[report.review_risk] }}>
-                    {RISK_LABELS[report.review_risk]}
-                  </span>
-                )}
-              </div>
-              {report.review_note && <p className="text-sm text-stone-300">{report.review_note}</p>}
-            </div>
-          )}
-
           {/* Comentario */}
           {report.comment && (
             <p className="text-stone-300 text-sm leading-relaxed">
@@ -163,6 +211,9 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
           <p className="text-xs text-stone-600 font-mono">
             {report.lat.toFixed(5)}, {report.lng.toFixed(5)}
           </p>
+
+          {/* Línea de tiempo del caso */}
+          <Timeline report={report} count={count} />
 
           {/* Verificaciones */}
           <div className="flex items-center justify-between pt-1 border-t border-stone-800">
