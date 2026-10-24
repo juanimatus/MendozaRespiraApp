@@ -13,9 +13,22 @@ import { downscaleImage, fileToBase64 } from '@/lib/image';
 import { reportTypeFor, type PhotoAnalysis } from '@/lib/photo-analysis';
 import { MUNICIPIOS, reverseGeocode } from '@/lib/municipios';
 
-const TYPES: ReportType[] = [
-  'arbol_peligroso', 'rama_peligrosa', 'arbol_seco', 'falta_frentista',
-  'parada_sin_arbol', 'tocon', 'arbol_talado', 'sospecha',
+// Tipos agrupados, con una línea que explica cuándo usar cada uno
+const TYPE_GROUPS: { title: string; items: [ReportType, string][] }[] = [
+  { title: 'Riesgo', items: [
+    ['arbol_peligroso', 'Inclinado, con raíces levantadas o tronco dañado'],
+    ['rama_peligrosa',  'Rama quebrada o colgando sobre la vereda o la calle'],
+    ['arbol_seco',      'Sin hojas en temporada o con la corteza muerta'],
+  ] },
+  { title: 'Falta de árboles', items: [
+    ['falta_frentista',  'Frente de casa o comercio sin arbolado'],
+    ['parada_sin_arbol', 'Cazuela vacía, parada o plaza donde se puede plantar'],
+  ] },
+  { title: 'Tala', items: [
+    ['tocon',        'Quedó solo el tocón de un árbol cortado'],
+    ['arbol_talado', 'Árbol recién cortado o derribado'],
+    ['sospecha',     'Poda excesiva, anillado o señales de una tala próxima'],
+  ] },
 ];
 const EASE = [0.4, 0, 0.2, 1] as const;
 
@@ -333,25 +346,36 @@ export default function ReportarPage() {
           <label className="text-sm font-medium text-stone-300">
             Tipo de reporte <span className="text-red-400">*</span>
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {TYPES.map((t) => (
-              <motion.button
-                key={t}
-                type="button"
-                whileTap={{ scale: 0.96 }}
-                onClick={() => { setType(t); setTypeTouched(true); }}
-                className={`relative flex items-center gap-2 py-2.5 px-3 rounded-xl text-left text-xs font-semibold border transition-colors duration-150
-                  ${type === t
-                    ? 'bg-green-800 border-green-600 text-white'
-                    : 'bg-stone-900 border-stone-700 text-stone-400 hover:border-stone-500'
-                  }`}
-              >
-                <span className="w-2 h-2 shrink-0 rounded-full" style={{ backgroundColor: REPORT_TYPE_COLORS[t] }} />
-                {REPORT_TYPE_LABELS[t]}
-                {type === t && !typeTouched && analysis && (
-                  <span className="absolute -top-2 right-1.5 rounded-full bg-green-500 px-1.5 text-[9px] font-bold text-stone-950">IA</span>
-                )}
-              </motion.button>
+          <div className="space-y-3">
+            {TYPE_GROUPS.map(group => (
+              <div key={group.title} className="space-y-1.5">
+                <p className="text-[11px] uppercase tracking-wide text-stone-500">{group.title}</p>
+                <div className="rounded-xl border border-stone-800 divide-y divide-stone-800 overflow-hidden">
+                  {group.items.map(([t, hint]) => (
+                    <motion.button
+                      key={t}
+                      type="button"
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => { setType(t); setTypeTouched(true); }}
+                      aria-pressed={type === t}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors duration-150
+                        ${type === t ? 'bg-green-900/60' : 'bg-stone-900 hover:bg-stone-800/80'}`}
+                    >
+                      <span className="w-2.5 h-2.5 shrink-0 rounded-full" style={{ backgroundColor: REPORT_TYPE_COLORS[t] }} />
+                      <span className="flex-1 min-w-0">
+                        <span className={`flex items-center gap-1.5 text-sm font-semibold ${type === t ? 'text-white' : 'text-stone-200'}`}>
+                          {REPORT_TYPE_LABELS[t]}
+                          {type === t && !typeTouched && analysis && (
+                            <span className="rounded-full bg-green-500 px-1.5 text-[9px] font-bold text-stone-950">IA</span>
+                          )}
+                        </span>
+                        <span className="block text-xs text-stone-500">{hint}</span>
+                      </span>
+                      <span className={`w-4 h-4 shrink-0 rounded-full border-2 ${type === t ? 'border-green-500 bg-green-500 ring-2 ring-inset ring-stone-950' : 'border-stone-600'}`} />
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </motion.section>

@@ -56,7 +56,7 @@ export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   sospecha:     'Sospecha de tala',
   arbol_peligroso:  'Árbol peligroso',
   falta_frentista:  'Faltan árboles en el frente',
-  parada_sin_arbol: 'Parada sin árbol',
+  parada_sin_arbol: 'Espacio para árbol',
   rama_peligrosa:   'Rama peligrosa',
   arbol_seco:       'Árbol seco',
 };
