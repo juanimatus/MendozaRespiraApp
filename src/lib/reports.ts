@@ -86,6 +86,21 @@ export function isRateLimited(err: unknown): boolean {
   return e?.hint === 'rate_limit' || !!e?.message?.includes('Demasiados envíos');
 }
 
+// Mensaje para los rechazos de confirmación (migración 008)
+export function verifyErrorMessage(err: unknown): string {
+  const e = err as { hint?: string; message?: string } | null;
+  if (e?.hint === 'own_report' || e?.message?.includes('subiste vos'))
+    return 'No podés confirmar un reporte que subiste vos.';
+  if (e?.hint === 'already_confirmed' || e?.message?.includes('ya se confirmó'))
+    return 'Desde esta conexión ya se confirmó este reporte.';
+  return 'No se pudo confirmar. Probá de nuevo.';
+}
+
+// ── ¿Este dispositivo subió el reporte? ──────────────────────────────────
+export function isOwnReport(reporterId: string | null): boolean {
+  return !!reporterId && reporterId === getDeviceId();
+}
+
 // ── Verificar un reporte ──────────────────────────────────────────────────
 export async function verifyReport(reportId: string): Promise<void> {
   const deviceId = getDeviceId();
@@ -95,7 +110,7 @@ export async function verifyReport(reportId: string): Promise<void> {
     .insert({ report_id: reportId, verifier_id: deviceId });
 
   // Ignorar error de duplicado (ya verificó este dispositivo)
-  if (error && !error.message.includes('unique')) throw error;
+  if (error && !error.message.includes('unique') && !error.message.includes('duplicate')) throw error;
 }
 
 // ── Chequear si el dispositivo actual ya verificó un reporte ─────────────

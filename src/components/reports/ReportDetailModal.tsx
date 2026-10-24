@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import { X, CheckCircle, Clock, Users, BadgeCheck, Send, Inbox, Wrench, MapPin } from 'lucide-react';
 
-import { verifyReport, hasVerified, isRateLimited, RATE_LIMIT_MESSAGE } from '@/lib/reports';
+import { verifyReport, hasVerified, isRateLimited, isOwnReport, verifyErrorMessage, RATE_LIMIT_MESSAGE } from '@/lib/reports';
 import type { ReportWithVerifications } from '@/types';
 import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, STATUS_LABELS, RISK_LABELS, RISK_COLORS } from '@/types';
 
@@ -117,12 +117,13 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
       onVerified();
     } catch (err) {
       console.error(err);
-      setVerifyError(isRateLimited(err) ? RATE_LIMIT_MESSAGE : 'No se pudo confirmar. Probá de nuevo.');
+      setVerifyError(isRateLimited(err) ? RATE_LIMIT_MESSAGE : verifyErrorMessage(err));
     } finally {
       setVerifying(false);
     }
   }
 
+  const own = isOwnReport(report.reporter_id);
   const typeColor = REPORT_TYPE_COLORS[report.type];
 
   return (
@@ -231,7 +232,12 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             </span>
           </div>
 
-          {/* Botón verificar */}
+          {/* Botón verificar — oculto para quien subió el reporte */}
+          {own ? (
+            <p className="w-full text-center text-xs text-stone-500 py-2">
+              Subiste este reporte. Que otros vecinos lo confirmen le da más peso.
+            </p>
+          ) : (
           <motion.button
             onClick={handleVerify}
             disabled={alreadyVerified || verifying}
@@ -249,6 +255,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             }
             {alreadyVerified ? 'Ya lo confirmaste' : 'Confirmo que existe'}
           </motion.button>
+          )}
           {verifyError && <p className="text-xs text-red-400 text-center">{verifyError}</p>}
         </div>
       </motion.div>
