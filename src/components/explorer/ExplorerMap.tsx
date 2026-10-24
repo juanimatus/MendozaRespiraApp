@@ -9,7 +9,7 @@ import 'leaflet/dist/leaflet.css';
 import { REGION } from '@/config/region';
 import type { MunicipioStats } from '@/lib/explorer';
 import type { ReportWithVerifications } from '@/types';
-import { CHORO_STEPS, type Metric } from './metrics';
+import { CHORO_STEPS, ZONE_COLORS, type Metric } from './metrics';
 import { REPORT_TYPE_COLORS, REPORT_TYPE_LABELS } from '@/types';
 
 function colorFor(value: number, max: number) {
@@ -20,6 +20,7 @@ function colorFor(value: number, max: number) {
 interface Props {
   stats:            Map<string, MunicipioStats>;
   metric:           Metric;
+  byZone:           boolean;                 // pintar cada departamento con el color de su zona
   points:           ReportWithVerifications[];
   selectedUnit:     string | null;
   highlightedId:    string | null;
@@ -101,7 +102,7 @@ function FitTo({ geo, unit, focus }: { geo: FeatureCollection | null; unit: stri
 }
 
 export default function ExplorerMap({
-  stats, metric, points, selectedUnit, highlightedId, onSelectUnit, onSelectReport,
+  stats, metric, byZone, points, selectedUnit, highlightedId, onSelectUnit, onSelectReport,
 }: Props) {
   const [geo, setGeo] = useState<FeatureCollection | null>(null);
   const [hoveredUnit, setHoveredUnit] = useState<string | null>(null);
@@ -126,6 +127,16 @@ export default function ExplorerMap({
     const isSelected = name === selectedUnit;
     const isHovered  = name === hoveredUnit;
     const dimmed     = selectedUnit !== null && !isSelected;
+    if (byZone) {
+      const zone = Object.keys(REGION.zones).find(z => REGION.zones[z].includes(name));
+      return {
+        color:       isSelected ? '#fafaf9' : isHovered ? '#e7e5e4' : '#1c1917',
+        weight:      isSelected ? 2.5 : isHovered ? 2 : 1,
+        dashArray:   undefined,
+        fillColor:   zone ? ZONE_COLORS[zone] : '#78716c',
+        fillOpacity: dimmed ? 0.12 : isSelected ? 0.6 : 0.4,
+      };
+    }
     return {
       color:       isSelected ? '#fafaf9' : isHovered ? '#d6d3d1' : '#57534e',
       weight:      isSelected ? 2.5 : isHovered ? 2 : 1,
