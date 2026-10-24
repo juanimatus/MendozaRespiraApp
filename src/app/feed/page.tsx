@@ -87,7 +87,7 @@ function FeedCard({ r, isNew, onHover, onOpen }: {
             <p className="text-sm font-semibold text-stone-100 leading-tight">{REPORT_TYPE_LABELS[r.type]}</p>
             <p className="flex items-center gap-1 text-[11px] text-stone-500 truncate">
               <MapPin className="w-3 h-3 shrink-0" />
-              <span className="truncate">{[r.address, r.municipio].filter(Boolean).join(' · ') || 'Sin ubicación'}</span>
+              <span className="truncate">{r.municipio ?? REGION.name}</span>
             </p>
           </div>
           <span className="shrink-0 text-[11px] text-stone-500">

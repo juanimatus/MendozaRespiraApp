@@ -33,6 +33,8 @@ export interface CreateReportInput {
   comment?: string;
   municipio?: string | null;
   address?: string | null;
+  gpsLat?: number;
+  gpsLng?: number;
   analysis?: PhotoAnalysis | null;
   photo: File;
 }
@@ -55,26 +57,29 @@ export async function createReport(input: CreateReportInput): Promise<string> {
     .getPublicUrl(fileName);
 
   // 2. Insertar reporte
-  const { data, error } = await supabase
-    .from('reports')
-    .insert({
-      lat:         input.lat,
-      lng:         input.lng,
-      type:        input.type,
-      comment:     input.comment ?? null,
-      municipio:   input.municipio ?? null,
-      address:     input.address ?? null,
-      ai_risk:     input.analysis?.peligrosidad ?? null,
-      ai_summary:  input.analysis?.resumen ?? null,
-      ai_analysis: input.analysis ?? null,
-      photo_url:   urlData.publicUrl,
-      reporter_id: deviceId,
-    })
-    .select('id')
-    .single();
+  const base = {
+    lat:         input.lat,
+    lng:         input.lng,
+    type:        input.type,
+    comment:     input.comment ?? null,
+    municipio:   input.municipio ?? null,
+    address:     input.address ?? null,
+    ai_risk:     input.analysis?.peligrosidad ?? null,
+    ai_summary:  input.analysis?.resumen ?? null,
+    ai_analysis: input.analysis ?? null,
+    photo_url:   urlData.publicUrl,
+    reporter_id: deviceId,
+  };
+  // Origen del GPS, guardado aparte (migración 010). Si las columnas todavía
+  // no existen en la base, se reintenta sin ellas para no romper el envío.
+  const withGps = { ...base, gps_lat: input.gpsLat ?? null, gps_lng: input.gpsLng ?? null };
 
-  if (error) throw error;
-  return data.id as string;
+  let res = await supabase.from('reports').insert(withGps).select('id').single();
+  if (res.error && /gps_lat|gps_lng|column/.test(res.error.message)) {
+    res = await supabase.from('reports').insert(base).select('id').single();
+  }
+  if (res.error) throw res.error;
+  return res.data.id as string;
 }
 
 // ── Límite de envíos (migración 007) ─────────────────────────────────────
@@ -86,6 +91,21 @@ export function isRateLimited(err: unknown): boolean {
   return e?.hint === 'rate_limit' || !!e?.message?.includes('Demasiados envíos');
 }
 
+// Mensaje para los rechazos de confirmación (migración 008)
+export function verifyErrorMessage(err: unknown): string {
+  const e = err as { hint?: string; message?: string } | null;
+  if (e?.hint === 'own_report' || e?.message?.includes('subiste vos'))
+    return 'No podés confirmar un reporte que subiste vos.';
+  if (e?.hint === 'already_confirmed' || e?.message?.includes('ya se confirmó'))
+    return 'Desde esta conexión ya se confirmó este reporte.';
+  return 'No se pudo confirmar. Probá de nuevo.';
+}
+
+// ── ¿Este dispositivo subió el reporte? ──────────────────────────────────
+export function isOwnReport(reporterId: string | null): boolean {
+  return !!reporterId && reporterId === getDeviceId();
+}
+
 // ── Verificar un reporte ──────────────────────────────────────────────────
 export async function verifyReport(reportId: string): Promise<void> {
   const deviceId = getDeviceId();
@@ -95,7 +115,7 @@ export async function verifyReport(reportId: string): Promise<void> {
     .insert({ report_id: reportId, verifier_id: deviceId });
 
   // Ignorar error de duplicado (ya verificó este dispositivo)
-  if (error && !error.message.includes('unique')) throw error;
+  if (error && !error.message.includes('unique') && !error.message.includes('duplicate')) throw error;
 }
 
 // ── Chequear si el dispositivo actual ya verificó un reporte ─────────────

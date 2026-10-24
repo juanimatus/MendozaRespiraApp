@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'motion/react';
 import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle } from 'lucide-react';
 
@@ -12,6 +13,11 @@ import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS } from '@/types';
 import { downscaleImage, fileToBase64 } from '@/lib/image';
 import type { PhotoAnalysis } from '@/lib/photo-analysis';
 import { MUNICIPIOS, reverseGeocode } from '@/lib/municipios';
+
+const LocationPicker = dynamic(() => import('@/components/reportar/LocationPicker'), {
+  ssr: false,
+  loading: () => <div className="h-56 w-full rounded-xl bg-stone-900 animate-pulse" />,
+});
 
 // Tipos agrupados, con una línea que explica cuándo usar cada uno
 const TYPE_GROUPS: { title: string; items: [ReportType, string][] }[] = [
@@ -59,6 +65,7 @@ export default function ReportarPage() {
   const [photo, setPhoto]         = useState<File | null>(null);
   const [photoPreview, setPreview] = useState<string | null>(null);
   const [location, setLocation]   = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsOrigin, setGpsOrigin] = useState<{ lat: number; lng: number } | null>(null);
   const [locError, setLocError]   = useState<string | null>(null);
   const [municipio, setMunicipio] = useState<string>('');
   const [address, setAddress]     = useState<string | null>(null);
@@ -99,6 +106,19 @@ export default function ReportarPage() {
     }
   }
 
+  // Fija el punto y detecta el departamento (lo usan el GPS y el mapa)
+  const applyLocation = useCallback((loc: { lat: number; lng: number }) => {
+    setLocation(loc);
+    setGeocoding(true);
+    reverseGeocode(loc.lat, loc.lng)
+      .then(({ municipio: m, address: addr }) => {
+        if (m) setMunicipio(m);
+        setAddress(addr);
+      })
+      .catch((err) => console.warn('Geocodificación reversa falló', err))
+      .finally(() => setGeocoding(false));
+  }, []);
+
   // ── Geolocalización ──────────────────────────────────────────────────
   const getLocation = useCallback(() => {
     setLocError(null);
@@ -109,16 +129,8 @@ export default function ReportarPage() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setLocation(loc);
-        // Detectar el departamento; si falla, el usuario lo elige a mano
-        setGeocoding(true);
-        reverseGeocode(loc.lat, loc.lng)
-          .then(({ municipio: m, address: addr }) => {
-            if (m) setMunicipio(m);
-            setAddress(addr);
-          })
-          .catch((err) => console.warn('Geocodificación reversa falló', err))
-          .finally(() => setGeocoding(false));
+        setGpsOrigin(loc);
+        applyLocation(loc);
       },
       (err) => {
         console.error(err);
@@ -126,7 +138,7 @@ export default function ReportarPage() {
       },
       { enableHighAccuracy: true, timeout: 10_000 }
     );
-  }, []);
+  }, [applyLocation]);
 
   // ── Envío ─────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
@@ -138,6 +150,8 @@ export default function ReportarPage() {
       const id = await createReport({
         lat:     location.lat,
         lng:     location.lng,
+        gpsLat:  gpsOrigin?.lat ?? location.lat,
+        gpsLng:  gpsOrigin?.lng ?? location.lng,
         type,
         comment: comment.trim() || undefined,
         municipio: municipio || null,
@@ -355,7 +369,7 @@ export default function ReportarPage() {
                   onClick={getLocation}
                   className="ml-auto text-xs text-green-500 hover:text-green-300"
                 >
-                  Actualizar
+                  Actualizar GPS
                 </button>
               </motion.div>
             ) : (
@@ -378,6 +392,15 @@ export default function ReportarPage() {
               </motion.button>
             )}
           </AnimatePresence>
+
+          {location && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-stone-400">
+                Movés el pin o tocás el mapa para marcar el árbol exacto (puede estar lejos de donde sacaste la foto).
+              </p>
+              <LocationPicker value={location} onChange={applyLocation} />
+            </div>
+          )}
 
           {location && (
             <div className="flex items-center gap-2">
