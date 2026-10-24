@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence, animate } from 'motion/react';
-import { TreeDeciduous, Menu, MapPin, CheckCircle, Clock, X, Plus, AlertTriangle, BadgeCheck } from 'lucide-react';
+import { TreeDeciduous, Menu, MapPin, CheckCircle, X, Plus, AlertTriangle, BadgeCheck, Users } from 'lucide-react';
 
 import SideMenu from '@/components/layout/SideMenu';
 import ReportDetailModal from '@/components/reports/ReportDetailModal';
@@ -16,7 +16,7 @@ import {
   FEED_PAGE_SIZE, type FeedFilters, type MunicipioStats,
 } from '@/lib/explorer';
 import type { ReportWithVerifications, ReportType } from '@/types';
-import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, RISK_LABELS, RISK_COLORS, riskOf } from '@/types';
+import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS } from '@/types';
 
 // Leaflet no funciona en SSR
 const ExplorerMap = dynamic(() => import('@/components/explorer/ExplorerMap'), {
@@ -63,62 +63,65 @@ function Chip({ active, onClick, children, color }: {
   );
 }
 
+// Publicación del feed: quién/qué/dónde, el comentario del vecino, la foto y
+// en qué quedó el reporte (sin burocracia: enviado → revisado)
 function FeedCard({ r, isNew, onHover, onOpen }: {
   r: ReportWithVerifications; isNew: boolean;
   onHover: (id: string | null) => void; onOpen: () => void;
 }) {
-  const risk = riskOf(r);
   return (
-    <motion.button layout
+    <motion.article layout
       initial={{ opacity: 0, y: isNew ? -12 : 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: EASE }}
       onMouseEnter={() => onHover(r.id)} onMouseLeave={() => onHover(null)}
-      onFocus={() => onHover(r.id)} onBlur={() => onHover(null)}
-      onClick={onOpen}
-      className={`w-full text-left flex gap-3 p-3 rounded-2xl border transition-colors
-        ${isNew ? 'border-green-700 bg-green-950/30' : 'border-stone-800 bg-stone-900/60 hover:border-stone-600 hover:bg-stone-900'}`}>
-      {r.photo_url && (
-        <div className="relative w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-stone-800">
-          <Image src={r.photo_url} alt="" fill className="object-cover" sizes="80px" />
-        </div>
-      )}
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white"
-            style={{ backgroundColor: REPORT_TYPE_COLORS[r.type] }}>
-            {REPORT_TYPE_LABELS[r.type]}
+      className={`rounded-2xl border overflow-hidden transition-colors
+        ${isNew ? 'border-green-700 bg-green-950/30' : 'border-stone-800 bg-stone-900/60 hover:border-stone-600'}`}>
+      <button onClick={onOpen} onFocus={() => onHover(r.id)} onBlur={() => onHover(null)}
+        className="w-full text-left">
+        <header className="flex items-center gap-2.5 px-3.5 pt-3">
+          <span className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: `${REPORT_TYPE_COLORS[r.type]}26` }}>
+            <TreeDeciduous className="w-4 h-4" style={{ color: REPORT_TYPE_COLORS[r.type] }} />
           </span>
-          {risk && risk !== 'ninguna' && (
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white"
-              style={{ backgroundColor: RISK_COLORS[risk] }}>
-              {RISK_LABELS[risk]}
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-stone-100 leading-tight">{REPORT_TYPE_LABELS[r.type]}</p>
+            <p className="flex items-center gap-1 text-[11px] text-stone-500 truncate">
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="truncate">{[r.address, r.municipio].filter(Boolean).join(' · ') || 'Sin ubicación'}</span>
+            </p>
+          </div>
+          <span className="shrink-0 text-[11px] text-stone-500">
+            {isNew ? <span className="font-semibold text-green-400">Nuevo</span> : formatDate(r.created_at)}
+          </span>
+        </header>
+
+        {r.comment && (
+          <p className="px-3.5 pt-2.5 text-sm text-stone-200 leading-relaxed line-clamp-4">“{r.comment}”</p>
+        )}
+
+        {r.photo_url && (
+          <div className="relative mt-3 mx-3.5 aspect-[4/3] rounded-xl overflow-hidden bg-stone-800">
+            <Image src={r.photo_url} alt={REPORT_TYPE_LABELS[r.type]} fill className="object-cover" sizes="(min-width: 1024px) 420px, 100vw" />
+          </div>
+        )}
+
+        <footer className="flex items-center gap-3 px-3.5 py-3 text-[11px]">
+          {r.reviewed_at ? (
+            <span className="flex items-center gap-1 font-medium text-sky-300">
+              <BadgeCheck className="w-3.5 h-3.5" /> Revisado por el técnico
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 font-medium text-green-400">
+              <CheckCircle className="w-3.5 h-3.5" /> Enviado al municipio
             </span>
           )}
-          {r.reviewed_at && (
-            <span className="flex items-center gap-1 text-[11px] font-medium text-sky-300">
-              <BadgeCheck className="w-3 h-3" /> Revisado
-            </span>
-          )}
-          {isNew && <span className="text-[11px] font-semibold text-green-400">Nuevo</span>}
-        </div>
-        <p className="text-sm text-stone-300 line-clamp-2">
-          {r.review_note ?? r.ai_summary ?? r.comment ?? 'Sin descripción'}
-        </p>
-        <div className="flex items-center gap-3 text-[11px] text-stone-500">
-          <span className="flex items-center gap-1 truncate">
-            <MapPin className="w-3 h-3 shrink-0" />
-            <span className="truncate">{[r.address, r.municipio].filter(Boolean).join(' · ') || 'Sin ubicación'}</span>
+          <span className="ml-auto flex items-center gap-1 text-stone-400">
+            <Users className="w-3.5 h-3.5" />
+            {r.verification_count === 1 ? '1 vecino lo confirmó' : `${r.verification_count} vecinos lo confirmaron`}
           </span>
-          <span className="flex items-center gap-1 shrink-0">
-            {r.status === 'verified'
-              ? <CheckCircle className="w-3 h-3 text-green-600" />
-              : <Clock className="w-3 h-3" />}
-            {r.verification_count}
-          </span>
-          <span className="shrink-0 ml-auto">{formatDate(r.created_at)}</span>
-        </div>
-      </div>
-    </motion.button>
+        </footer>
+      </button>
+    </motion.article>
   );
 }
 
@@ -389,7 +392,7 @@ export default function ExplorarPage() {
 
             {/* Feed */}
             <section className="space-y-2">
-              <h3 className="text-xs uppercase tracking-wider text-stone-500">Últimos reportes</h3>
+              <h3 className="text-xs uppercase tracking-wider text-stone-500">Reportes de los vecinos</h3>
               {loading ? (
                 [...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-2xl bg-stone-900 animate-pulse" />)
               ) : feed.length === 0 ? (

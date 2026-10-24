@@ -4,13 +4,13 @@ import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle, Sparkles } from 'lucide-react';
+import { Camera, MapPin, Loader2, ChevronLeft, CheckCircle } from 'lucide-react';
 
 import { createReport, isRateLimited, RATE_LIMIT_MESSAGE } from '@/lib/reports';
 import type { ReportType } from '@/types';
-import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS, RISK_LABELS, RISK_COLORS } from '@/types';
+import { REPORT_TYPE_LABELS, REPORT_TYPE_COLORS } from '@/types';
 import { downscaleImage, fileToBase64 } from '@/lib/image';
-import { reportTypeFor, type PhotoAnalysis } from '@/lib/photo-analysis';
+import type { PhotoAnalysis } from '@/lib/photo-analysis';
 import { MUNICIPIOS, reverseGeocode } from '@/lib/municipios';
 
 // Tipos agrupados, con una línea que explica cuándo usar cada uno
@@ -54,10 +54,7 @@ export default function ReportarPage() {
 
   // Estado del formulario
   const [type, setType]           = useState<ReportType | null>(null);
-  const [typeTouched, setTypeTouched] = useState(false);
   const [analysis, setAnalysis]   = useState<PhotoAnalysis | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [comment, setComment]     = useState('');
   const [photo, setPhoto]         = useState<File | null>(null);
   const [photoPreview, setPreview] = useState<string | null>(null);
@@ -77,16 +74,14 @@ export default function ReportarPage() {
     if (!original) return;
     setPreview(URL.createObjectURL(original));
     setAnalysis(null);
-    setAnalysisError(null);
 
     const file = await downscaleImage(original);
     setPhoto(file);
     analyzePhoto(file);
   }
 
-  // ── Análisis con IA: sugiere tipo y peligrosidad; el vecino puede cambiarlo
+  // ── Análisis de la foto: clasificación interna para el técnico, el vecino no lo ve
   async function analyzePhoto(file: File) {
-    setAnalyzing(true);
     try {
       const res = await fetch('/api/clasificar', {
         method: 'POST',
@@ -99,13 +94,8 @@ export default function ReportarPage() {
       if (!res.ok) throw new Error(data.error ?? 'Error al analizar');
       const result = data as PhotoAnalysis;
       setAnalysis(result);
-      const suggested = reportTypeFor(result.categoria);
-      if (suggested && !typeTouched) setType(suggested);
     } catch (err) {
       console.warn('Análisis de foto falló', err);
-      setAnalysisError('No pudimos analizar la foto. Elegí el tipo de reporte a mano.');
-    } finally {
-      setAnalyzing(false);
     }
   }
 
@@ -199,7 +189,7 @@ export default function ReportarPage() {
           <button onClick={() => router.push('/feed')} className="btn-primary">
             Ver en el mapa
           </button>
-          <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); setMunicipio(''); setAddress(null); setAnalysis(null); setAnalysisError(null); setType(null); setTypeTouched(false); }} className="btn-secondary">
+          <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); setMunicipio(''); setAddress(null); setAnalysis(null); setType(null); }} className="btn-secondary">
             Crear otro reporte
           </button>
         </motion.div>
@@ -249,7 +239,7 @@ export default function ReportarPage() {
                 <Image src={photoPreview} alt="Preview" fill className="object-cover" />
                 <button
                   type="button"
-                  onClick={() => { setPhoto(null); setPreview(null); setAnalysis(null); setAnalysisError(null); if (fileRef.current) fileRef.current.value = ''; }}
+                  onClick={() => { setPhoto(null); setPreview(null); setAnalysis(null); if (fileRef.current) fileRef.current.value = ''; }}
                   className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2.5 py-1 rounded-lg"
                 >
                   Cambiar
@@ -277,53 +267,6 @@ export default function ReportarPage() {
               </motion.button>
             )}
           </AnimatePresence>
-
-          {analyzing && (
-            <p className="flex items-center gap-2 text-xs text-stone-400">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Analizando la foto…
-            </p>
-          )}
-          {analysisError && <p className="text-xs text-amber-400">{analysisError}</p>}
-          {analysis && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.15, ease: EASE }}
-              className="rounded-xl border border-stone-700 bg-stone-900 p-3 space-y-2 text-sm"
-            >
-              <div className="flex items-center gap-2 flex-wrap">
-                <Sparkles className="w-4 h-4 text-green-400" />
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
-                  style={{ backgroundColor: RISK_COLORS[analysis.peligrosidad] }}>
-                  {RISK_LABELS[analysis.peligrosidad]}
-                </span>
-                {analysis.arboles_faltantes > 0 && (
-                  <span className="text-xs text-sky-300">
-                    Faltan {analysis.arboles_faltantes} árbol{analysis.arboles_faltantes === 1 ? '' : 'es'}
-                  </span>
-                )}
-              </div>
-              <p className="text-stone-300">{analysis.resumen}</p>
-              {analysis.motivos.length > 0 && (
-                <ul className="text-xs text-stone-400 list-disc pl-4 space-y-0.5">
-                  {analysis.motivos.map((m, i) => <li key={i}>{m}</li>)}
-                </ul>
-              )}
-              {analysis.especie_probable && (
-                <p className="text-xs text-stone-500">
-                  Especie probable: {analysis.especie_probable}
-                  {analysis.especie_confianza && ` (confianza ${analysis.especie_confianza})`}
-                </p>
-              )}
-              {!reportTypeFor(analysis.categoria) && (
-                <p className="text-xs text-amber-400">
-                  {analysis.categoria === 'no_es_arbolado'
-                    ? 'La foto no parece mostrar arbolado. Revisala antes de enviar.'
-                    : 'No vemos un problema en la foto. Si lo hay, elegí el tipo abajo y contalo en el comentario.'}
-                </p>
-              )}
-            </motion.div>
-          )}
 
           <input
             ref={fileRef}
@@ -356,7 +299,7 @@ export default function ReportarPage() {
                       key={t}
                       type="button"
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => { setType(t); setTypeTouched(true); }}
+                      onClick={() => setType(t)}
                       aria-pressed={type === t}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors duration-150
                         ${type === t ? 'bg-green-900/60' : 'bg-stone-900 hover:bg-stone-800/80'}`}
@@ -365,9 +308,6 @@ export default function ReportarPage() {
                       <span className="flex-1 min-w-0">
                         <span className={`flex items-center gap-1.5 text-sm font-semibold ${type === t ? 'text-white' : 'text-stone-200'}`}>
                           {REPORT_TYPE_LABELS[t]}
-                          {type === t && !typeTouched && analysis && (
-                            <span className="rounded-full bg-green-500 px-1.5 text-[9px] font-bold text-stone-950">IA</span>
-                          )}
                         </span>
                         <span className="block text-xs text-stone-500">{hint}</span>
                       </span>

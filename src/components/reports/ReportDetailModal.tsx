@@ -147,20 +147,6 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
             </div>
           )}
 
-          {/* Análisis IA */}
-          {report.ai_summary && (
-            <div className="rounded-xl bg-stone-800/60 p-3 space-y-1.5">
-              {report.ai_risk && !report.reviewed_at && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
-                  style={{ backgroundColor: RISK_COLORS[report.ai_risk] }}>
-                  {RISK_LABELS[report.ai_risk]}
-                </span>
-              )}
-              <p className="text-sm text-stone-300">{report.ai_summary}</p>
-              <p className="text-[11px] text-stone-500">Análisis automático de la foto</p>
-            </div>
-          )}
-
           {/* Comentario */}
           {report.comment && (
             <p className="text-stone-300 text-sm leading-relaxed">

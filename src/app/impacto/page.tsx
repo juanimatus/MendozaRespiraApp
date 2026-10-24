@@ -99,7 +99,7 @@ export default function ImpactoPage() {
             {stats.firstReportAt && (
               <p className="text-xs text-stone-500">
                 Desde el {new Date(stats.firstReportAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}.
-                {' '}{stats.verified} reportes verificados por la comunidad y {stats.highRisk} con riesgo alto o crítico según la IA.
+                {' '}{stats.verified} reportes verificados por la comunidad y {stats.highRisk} con riesgo alto o crítico.
                 {' '}Personas = dispositivos anónimos distintos.
               </p>
             )}
