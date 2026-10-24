@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, BadgeCheck, MapPin, Sparkles, Loader2, ExternalLink, Inbox, EyeOff } from 'lucide-react';
+import { Menu, BadgeCheck, MapPin, Sparkles, Loader2, ExternalLink, Inbox, EyeOff, Eye } from 'lucide-react';
 
 import SideMenu from '@/components/layout/SideMenu';
 import { fetchReviewQueue, submitReview, hideReport } from '@/lib/review';
@@ -85,6 +85,20 @@ function ReviewCard({ report, onDone }: { report: ReportWithVerifications; onDon
           <span className="truncate">{[report.address, report.municipio].filter(Boolean).join(' · ') || `${report.lat.toFixed(5)}, ${report.lng.toFixed(5)}`}</span>
           <ExternalLink className="w-3 h-3 shrink-0 text-stone-500" />
         </a>
+
+        {/* Validación del lugar: Street View para confirmar que el árbol existe */}
+        <div className="flex gap-2">
+          <a href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${report.lat},${report.lng}`}
+            target="_blank" rel="noreferrer"
+            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-stone-300 border border-stone-700 rounded-lg py-1.5 hover:border-green-700 hover:text-green-400 transition-colors">
+            <Eye className="w-3.5 h-3.5" /> Street View
+          </a>
+          <a href={`https://www.google.com/maps/search/?api=1&query=${report.lat},${report.lng}`}
+            target="_blank" rel="noreferrer"
+            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-stone-300 border border-stone-700 rounded-lg py-1.5 hover:border-green-700 hover:text-green-400 transition-colors">
+            <MapPin className="w-3.5 h-3.5" /> Ver en el mapa
+          </a>
+        </div>
 
         {report.comment && <p className="text-sm text-stone-400">“{report.comment}”</p>}
 

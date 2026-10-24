@@ -33,6 +33,8 @@ export interface CreateReportInput {
   comment?: string;
   municipio?: string | null;
   address?: string | null;
+  gpsLat?: number;
+  gpsLng?: number;
   analysis?: PhotoAnalysis | null;
   photo: File;
 }
@@ -55,26 +57,29 @@ export async function createReport(input: CreateReportInput): Promise<string> {
     .getPublicUrl(fileName);
 
   // 2. Insertar reporte
-  const { data, error } = await supabase
-    .from('reports')
-    .insert({
-      lat:         input.lat,
-      lng:         input.lng,
-      type:        input.type,
-      comment:     input.comment ?? null,
-      municipio:   input.municipio ?? null,
-      address:     input.address ?? null,
-      ai_risk:     input.analysis?.peligrosidad ?? null,
-      ai_summary:  input.analysis?.resumen ?? null,
-      ai_analysis: input.analysis ?? null,
-      photo_url:   urlData.publicUrl,
-      reporter_id: deviceId,
-    })
-    .select('id')
-    .single();
+  const base = {
+    lat:         input.lat,
+    lng:         input.lng,
+    type:        input.type,
+    comment:     input.comment ?? null,
+    municipio:   input.municipio ?? null,
+    address:     input.address ?? null,
+    ai_risk:     input.analysis?.peligrosidad ?? null,
+    ai_summary:  input.analysis?.resumen ?? null,
+    ai_analysis: input.analysis ?? null,
+    photo_url:   urlData.publicUrl,
+    reporter_id: deviceId,
+  };
+  // Origen del GPS, guardado aparte (migración 010). Si las columnas todavía
+  // no existen en la base, se reintenta sin ellas para no romper el envío.
+  const withGps = { ...base, gps_lat: input.gpsLat ?? null, gps_lng: input.gpsLng ?? null };
 
-  if (error) throw error;
-  return data.id as string;
+  let res = await supabase.from('reports').insert(withGps).select('id').single();
+  if (res.error && /gps_lat|gps_lng|column/.test(res.error.message)) {
+    res = await supabase.from('reports').insert(base).select('id').single();
+  }
+  if (res.error) throw res.error;
+  return res.data.id as string;
 }
 
 // ── Límite de envíos (migración 007) ─────────────────────────────────────
