@@ -23,7 +23,7 @@ const pin = L.divIcon({
 });
 
 interface Props {
-  value: { lat: number; lng: number };
+  value: { lat: number; lng: number } | null;
   onChange: (p: { lat: number; lng: number }) => void;
 }
 
@@ -32,36 +32,39 @@ function Clicks({ onChange }: { onChange: Props['onChange'] }) {
   return null;
 }
 
-// Recentra el mapa cuando el GPS cambia el punto desde afuera
-function Recenter({ value }: { value: Props['value'] }) {
+// Recentra el mapa cuando el punto cambia desde afuera (búsqueda de dirección)
+function Recenter({ value }: { value: { lat: number; lng: number } }) {
   const map = useMap();
-  useEffect(() => { map.setView([value.lat, value.lng], map.getZoom()); }, [value.lat, value.lng, map]);
+  useEffect(() => {
+    map.setView([value.lat, value.lng], Math.max(map.getZoom(), 17));
+  }, [value.lat, value.lng, map]);
   return null;
 }
 
 export default function LocationPicker({ value, onChange }: Props) {
   return (
-    <div className="h-56 w-full rounded-xl overflow-hidden">
+    <div className="h-64 w-full rounded-xl overflow-hidden">
     <MapContainer
-      center={[value.lat, value.lng]}
-      zoom={17}
+      center={value ? [value.lat, value.lng] : REGION.pickerCenter}
+      zoom={value ? 17 : 14}
       className="h-full w-full"
-      zoomControl={false}
       attributionControl={false}
     >
       <TileLayer url={TILE_URL} maxNativeZoom={18} maxZoom={19} />
       <TileLayer url={LABELS_URL} maxNativeZoom={18} maxZoom={19} />
-      <Marker
-        position={[value.lat, value.lng]}
-        icon={pin}
-        draggable
-        eventHandlers={{ dragend: (e) => {
-          const { lat, lng } = (e.target as L.Marker).getLatLng();
-          onChange({ lat, lng });
-        } }}
-      />
+      {value && (
+        <Marker
+          position={[value.lat, value.lng]}
+          icon={pin}
+          draggable
+          eventHandlers={{ dragend: (e) => {
+            const { lat, lng } = (e.target as L.Marker).getLatLng();
+            onChange({ lat, lng });
+          } }}
+        />
+      )}
       <Clicks onChange={onChange} />
-      <Recenter value={value} />
+      {value && <Recenter value={value} />}
     </MapContainer>
     </div>
   );

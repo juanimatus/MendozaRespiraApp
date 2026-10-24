@@ -19,6 +19,7 @@ export interface RegionConfig {
   units:       readonly string[];
   zones:       Record<string, readonly string[]>;
   focus:       { label: string; units: readonly string[] };   // encuadre inicial del mapa
+  pickerCenter: [number, number];            // donde arranca el mapa para marcar un reporte
 }
 
 export const MENDOZA: RegionConfig = {
@@ -34,6 +35,7 @@ export const MENDOZA: RegionConfig = {
   units:       MUNICIPIOS,
   zones:       ZONAS,
   focus:       { label: 'Zona Este', units: ZONAS['Zona Este'] },
+  pickerCenter: [-33.0815, -68.4705],       // San Martín
 };
 
 export const REGION = MENDOZA;

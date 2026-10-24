@@ -76,3 +76,19 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeoResul
 
   return { municipio, address };
 }
+
+// Búsqueda de direcciones dentro de la región (Nominatim, sin API key)
+export interface PlaceResult { label: string; lat: number; lng: number }
+
+export async function searchAddress(query: string, bounds: [[number, number], [number, number]]): Promise<PlaceResult[]> {
+  const [[s, w], [n, e]] = bounds;
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=ar&accept-language=es`
+    + `&viewbox=${w},${n},${e},${s}&bounded=1&q=${encodeURIComponent(query)}`;
+  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`Nominatim ${res.status}`);
+  const data = (await res.json()) as { display_name: string; lat: string; lon: string }[];
+  return data.map(d => ({
+    label: d.display_name.split(', ').slice(0, 3).join(', '),
+    lat: Number(d.lat), lng: Number(d.lon),
+  }));
+}
