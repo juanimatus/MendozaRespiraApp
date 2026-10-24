@@ -11,8 +11,8 @@ import { REGION } from '@/config/region';
 const EASE = [0.4, 0, 0.2, 1] as const;
 
 const STEPS = [
-  { icon: Camera,   title: 'Sacá una foto',     text: 'Un árbol peligroso, un frente sin árboles, una parada sin sombra o un tocón.' },
-  { icon: Sparkles, title: 'Un técnico lo evalúa', text: 'Un ingeniero agrónomo confirma el nivel de riesgo, con ayuda de la IA, para que el municipio sepa qué priorizar.' },
+  { icon: Camera,   title: 'Sacá una foto',     text: 'Un árbol peligroso, un frente sin árboles, un espacio para plantar o un tocón.' },
+  { icon: Sparkles, title: 'Un técnico lo evalúa', text: 'Un ingeniero agrónomo confirma el nivel de riesgo para que el municipio sepa qué priorizar.' },
   { icon: Users,    title: 'Los vecinos confirman', text: 'Cada confirmación suma evidencia. Los datos son abiertos para todos.' },
 ];
 
