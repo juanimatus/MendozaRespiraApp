@@ -227,6 +227,17 @@ Cambiar rol → Inspector / Administrador
 
 ---
 
+## Hoja de ruta: módulos futuros
+
+| Módulo | Qué suma | Estado |
+|--------|----------|--------|
+| **Mapeo satelital del arbolado** | Detectar con datos satelitales abiertos (Sentinel-2, Landsat, altura de copas Meta/WRI) dónde falta arbolado y dónde se perdió verde, sin esperar la denuncia. Las sugerencias van a `/revision` para el agrónomo. Plan por etapas en [`docs/hoja-de-ruta-satelital.md`](docs/hoja-de-ruta-satelital.md) | Propuesta |
+| **PASIP: sensores LoRa** | Red LoRaWAN de sensores de calidad de aire en el Parque de Actividades Industriales de Palmira | Idea |
+| **Alumbrado inteligente en San Martín** | Alerta de robo de lámparas y medición de contaminación lumínica | Idea |
+| **Formación de jóvenes del Este** | Talleres de tecnología y empleo para jóvenes de la Zona Este | Idea |
+
+---
+
 ## Contribuir
 
 Proyecto de civic tech. Los PRs son bienvenidos.
