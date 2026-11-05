@@ -26,7 +26,7 @@ municipio → primer contrato → fondos no reembolsables y aceleradoras → rec
 
 ### 2. Hay un cambio de reglas que crea la demanda (timing)
 
-- La **Ley provincial 9.702** (vigente desde fines de abril de 2026, todavía sin reglamentar)
+- La **Ley provincial 9.702** (vigente desde fines de abril de 2026 y reglamentada en agosto de 2026)
   pasa la responsabilidad del arbolado a los municipios y crea la plataforma provincial
   "Mi Árbol".
 - Cada municipio va a necesitar inventario, gestión de reclamos y prioridad de intervención,
