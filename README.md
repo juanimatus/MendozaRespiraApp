@@ -14,6 +14,47 @@ de rol (guardado en `localStorage`, sin login):
 
 ---
 
+## Resumen del proyecto (al 05/11/2026)
+
+**Qué es.** Reporte ciudadano georreferenciado del arbolado (tocones, talas, ramas
+peligrosas, árboles secos, espacios para árbol) con foco en la Zona Este y Palmira. Cada
+aviso se convierte en un caso con historial: foto, confirmaciones de vecinos, revisión de un
+agrónomo y resolución. El vecino lo usa gratis y sin burocracia.
+
+**Por qué importa.** Entre 2025 y 2026 hubo muertes por caídas de árboles en Mendoza, en
+algunos casos con avisos previos que se perdieron. La Ley 9.702 pasa el arbolado a los
+municipios, que necesitan cómo gestionarlo.
+
+**Qué ya está hecho.** App instalable en producción; mapa por departamento y explorador
+(`/feed`) escalable a otras regiones; feed de vecinos; línea de tiempo de cada caso;
+revisión técnica con Street View (`/revision`); privacidad (el público ve solo el
+departamento); seguridad (límites por IP, una confirmación por IP, edición solo para el
+personal); datos abiertos en `/impacto`; webhooks para Make y n8n. La IA de fotos existe pero
+está en pausa: primero revisión manual por agrónomo.
+
+**Premio Revelación Joven (Polo TIC Mendoza 2026).** Postulación enviada y aprobada en la
+primera etapa. Se presentó solo Mendoza Respira; el resto va como hoja de ruta.
+
+**Hoja de ruta** (detalle más abajo):
+
+- **Mapeo satelital**: datos abiertos (Sentinel-2, Landsat, copas de 1 m de Meta/WRI) para
+  encontrar dónde falta arbolado y dónde se perdió verde, sin esperar la denuncia. Google
+  Earth no sirve para medir. Primer paso: prueba en Palmira, costo cero.
+- **Soterrado y cableado en desuso**: ranking de cuadras para soterrar y mapa de cables
+  muertos para que el municipio intime a las empresas. El cobre solo se recicla por convenio.
+- **PASIP** (sensores LoRa), **alumbrado inteligente en San Martín** y **formación de jóvenes
+  del Este**.
+
+**Como startup.** Todavía no es invertible: falta un municipio usándolo con métricas reales,
+un socio técnico, un agrónomo en el equipo y login real para el personal municipal. Modelo:
+suscripción municipal, más la Provincia, distribuidoras y empresas. Camino: piloto con San
+Martín, después fondos no reembolsables y aceleradoras, y recién ahí inversión.
+
+**Próximos pasos.** Convenio de piloto con la Municipalidad de San Martín, login real,
+prueba satelital en Palmira y 60 días de métricas.
+
+---
+
 ## Stack
 
 | Capa       | Tecnología                              |
