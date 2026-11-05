@@ -236,6 +236,14 @@ Cambiar rol → Inspector / Administrador
 | **Alumbrado inteligente en San Martín** | Alerta de robo de lámparas y medición de contaminación lumínica | Idea |
 | **Formación de jóvenes del Este** | Talleres de tecnología y empleo para jóvenes de la Zona Este | Idea |
 
+### Mendoza Respira como startup
+
+Problema grave y documentado (caídas de árboles con avisos previos perdidos), una ley nueva
+(9.702) que pasa el arbolado a los municipios, un producto que ya funciona, costos bajos y
+escala a otra ciudad cambiando una configuración. Modelo: el vecino nunca paga; el municipio
+paga una suscripción. Todavía falta un piloto con un municipio y métricas reales para que sea
+invertible. Análisis completo, riesgos y próximos 90 días en [`docs/startup.md`](docs/startup.md).
+
 ---
 
 ## Contribuir
