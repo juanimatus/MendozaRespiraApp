@@ -235,6 +235,7 @@ Cambiar rol → Inspector / Administrador
 | **PASIP: sensores LoRa** | Red LoRaWAN de sensores de calidad de aire en el Parque de Actividades Industriales de Palmira | Idea |
 | **Alumbrado inteligente en San Martín** | Alerta de robo de lámparas y medición de contaminación lumínica | Idea |
 | **Formación de jóvenes del Este** | Talleres de tecnología y empleo para jóvenes de la Zona Este | Idea |
+| **Soterrado y cableado en desuso** | Ranking de cuadras donde conviene soterrar cables (conflicto árbol-cable) y mapa de cableado muerto para que el municipio intime a las empresas; el cobre se recicla solo por convenio. Detalle en [`docs/expansion-cables.md`](docs/expansion-cables.md) | Idea evaluada |
 
 ### Mendoza Respira como startup
 
