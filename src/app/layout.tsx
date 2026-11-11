@@ -6,7 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
 export const metadata: Metadata = {
-  title: 'Mendoza Respira AI',
+  title: 'Mendoza Respira',
   description: 'Plataforma GovTech para gestión inteligente del arbolado urbano en Mendoza',
   manifest: '/manifest.json',
   icons: {

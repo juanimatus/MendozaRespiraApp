@@ -60,7 +60,7 @@ export default function DashboardPage() {
         <TreeDeciduous className="w-5 h-5 text-green-500" />
         <div>
           <h1 className="text-base font-semibold text-stone-100 leading-tight">Dashboard Municipal</h1>
-          <p className="text-xs text-stone-500">Mendoza Respira AI</p>
+          <p className="text-xs text-stone-500">Mendoza Respira</p>
         </div>
       </header>
 
