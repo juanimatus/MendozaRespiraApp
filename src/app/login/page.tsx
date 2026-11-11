@@ -56,7 +56,7 @@ export default function LoginPage() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <TreeDeciduous className="w-5 h-5 text-green-500" />
-        <span className="font-semibold text-stone-100">Mendoza Respira AI</span>
+        <span className="font-semibold text-stone-100">Mendoza Respira</span>
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-10">

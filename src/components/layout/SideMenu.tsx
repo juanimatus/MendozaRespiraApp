@@ -88,7 +88,7 @@ export default function SideMenu({ open, onClose }: Props) {
               style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}>
               <div className="flex items-center gap-2">
                 <TreeDeciduous className="w-5 h-5 text-green-500" />
-                <span className="font-semibold text-stone-100 text-sm">Mendoza Respira AI</span>
+                <span className="font-semibold text-stone-100 text-sm">Mendoza Respira</span>
               </div>
               <button onClick={onClose}
                 className="p-1.5 rounded-lg text-stone-400 hover:text-stone-100 hover:bg-stone-800 transition-colors">
