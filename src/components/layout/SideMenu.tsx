@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   Map, PlusCircle, Info, X, TreeDeciduous,
   LayoutDashboard, ClipboardList, MessageSquareWarning,
-  Search, LogIn, LogOut, BarChart3, BadgeCheck,
+  Search, LogOut, BarChart3, BadgeCheck, ListChecks,
 } from 'lucide-react';
 import { useAuth, ROLE_LABELS, ROLE_COLORS, ROLE_BADGE } from '@/lib/auth-context';
 
@@ -17,6 +17,7 @@ const EASE = [0.4, 0, 0.2, 1] as const;
 const PUBLIC_LINKS = [
   { href: '/feed',     label: 'Explorar el mapa',    icon: Map },
   { href: '/reportar', label: 'Nuevo reporte',       icon: PlusCircle },
+  { href: '/mis-reportes', label: 'Mis reportes',    icon: ListChecks },
   { href: '/impacto',  label: 'Impacto y datos',     icon: BarChart3 },
   { href: '/acerca',   label: 'Acerca del proyecto', icon: Info },
 ];
@@ -95,9 +96,9 @@ export default function SideMenu({ open, onClose }: Props) {
               </button>
             </div>
 
-            {/* Perfil / sesión */}
-            <div className="px-4 py-3 border-b border-stone-800">
-              {user && profile ? (
+            {/* Perfil: solo para el equipo técnico. El vecino usa la app sin cuenta. */}
+            {user && profile && (
+              <div className="px-4 py-3 border-b border-stone-800">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <div className={`px-2.5 py-1 rounded-full text-xs font-semibold ${ROLE_COLORS[role]}`}>
@@ -108,14 +109,8 @@ export default function SideMenu({ open, onClose }: Props) {
                     {profile.full_name || profile.email}
                   </p>
                 </div>
-              ) : (
-                <Link href="/login" onClick={onClose}
-                  className="flex items-center gap-2 text-sm text-stone-400 hover:text-green-400 transition-colors">
-                  <LogIn className="w-4 h-4" />
-                  Iniciar sesión
-                </Link>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Links */}
             <div className="flex-1 overflow-y-auto py-2">
@@ -162,7 +157,14 @@ export default function SideMenu({ open, onClose }: Props) {
                   Cerrar sesión
                 </button>
               ) : null}
-              <p className="text-xs text-stone-700">Civic tech · Mendoza · MVP v0.2</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-stone-700">Civic tech · Mendoza · MVP v0.2</p>
+                {!user && (
+                  <Link href="/login" onClick={onClose} className="text-xs text-stone-700 hover:text-stone-400 transition-colors">
+                    Equipo técnico
+                  </Link>
+                )}
+              </div>
             </div>
           </motion.nav>
         </>

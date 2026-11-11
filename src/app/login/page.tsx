@@ -3,16 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { TreeDeciduous, Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
+import { TreeDeciduous, Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Camera } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 import Link from 'next/link';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
-type Mode = 'login' | 'register';
 
+// Acceso solo para el equipo técnico (agrónomo, inspector, admin).
+// El vecino reporta, mira el mapa y sigue su caso sin cuenta.
 const ROLE_REDIRECT: Record<string, string> = {
-  ciudadano: '/feed',
-  inspector: '/inspector',
+  inspector: '/revision',
   admin:     '/dashboard',
 };
 
@@ -20,40 +20,32 @@ export default function LoginPage() {
   const router  = useRouter();
   const supabase = createClient();
 
-  const [mode, setMode]         = useState<Mode>('login');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
-  const [success, setSuccess]   = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    if (mode === 'login') {
-      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
-      if (err) { setError(err.message); setLoading(false); return; }
+    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+    if (err) { setError('Email o contraseña incorrectos.'); setLoading(false); return; }
 
-      // Obtener rol y redirigir
-      const { data: profile } = await supabase
-        .from('profiles').select('role').eq('id', data.user.id).single();
-      const role = profile?.role ?? 'ciudadano';
-      router.push(ROLE_REDIRECT[role] ?? '/feed');
-      router.refresh();
-
-    } else {
-      const { error: err } = await supabase.auth.signUp({
-        email, password,
-        options: { data: { full_name: fullName, role: 'ciudadano' } },
-      });
-      if (err) { setError(err.message); setLoading(false); return; }
-      setSuccess('¡Cuenta creada! Revisá tu email para confirmar el registro.');
+    // Obtener rol y redirigir. Una cuenta sin rol técnico no tiene nada que hacer acá.
+    const { data: profile } = await supabase
+      .from('profiles').select('role').eq('id', data.user.id).single();
+    const target = ROLE_REDIRECT[profile?.role ?? ''];
+    if (!target) {
+      await supabase.auth.signOut();
+      setError('Esta cuenta no tiene acceso al panel técnico. Para reportar no necesitás cuenta.');
       setLoading(false);
+      return;
     }
+    router.push(target);
+    router.refresh();
   }
 
   return (
@@ -72,30 +64,13 @@ export default function LoginPage() {
           transition={{ duration: 0.2, ease: EASE }}
           className="w-full max-w-sm space-y-6">
 
-          {/* Tabs login / registro */}
-          <div className="flex rounded-xl bg-stone-900 border border-stone-800 p-1">
-            {(['login', 'register'] as Mode[]).map(m => (
-              <motion.button key={m} onClick={() => { setMode(m); setError(null); setSuccess(null); }}
-                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors
-                  ${mode === m ? 'bg-green-800 text-white' : 'text-stone-400 hover:text-stone-200'}`}>
-                {m === 'login' ? 'Iniciar sesión' : 'Registrarse'}
-              </motion.button>
-            ))}
+          <div className="space-y-1 text-center">
+            <h1 className="text-xl font-bold text-stone-100">Acceso del equipo técnico</h1>
+            <p className="text-sm text-stone-500">Para el ingeniero agrónomo, inspectores y el municipio.</p>
           </div>
 
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <AnimatePresence>
-              {mode === 'register' && (
-                <motion.div key="fullname"
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.15, ease: EASE }}>
-                  <input value={fullName} onChange={e => setFullName(e.target.value)}
-                    placeholder="Nombre completo" required className="form-input" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
@@ -120,38 +95,21 @@ export default function LoginPage() {
                   {error}
                 </motion.p>
               )}
-              {success && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="text-xs text-green-400 bg-green-900/20 border border-green-800/40 rounded-xl px-4 py-3">
-                  {success}
-                </motion.p>
-              )}
             </AnimatePresence>
 
             <motion.button type="submit" disabled={loading} whileTap={{ scale: 0.97 }}
               className="btn-primary w-full flex items-center justify-center gap-2">
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Procesando…</> :
-                mode === 'login' ? 'Ingresar' : 'Crear cuenta'}
+                'Ingresar'}
             </motion.button>
           </form>
 
-          {/* Usuarios de demo */}
-          <div className="space-y-2">
-            <p className="text-xs text-stone-600 text-center uppercase tracking-wider">Demo rápida</p>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: '👤 Ciudadano', email: 'ciudadano@mendozarespira.ar' },
-                { label: '🔍 Inspector', email: 'inspector@mendozarespira.ar' },
-                { label: '⚙️ Admin',     email: 'admin@mendozarespira.ar' },
-              ].map(({ label, email: e }) => (
-                <button key={e} onClick={() => { setEmail(e); setPassword('Demo1234!'); setMode('login'); }}
-                  className="text-xs py-2 px-1 bg-stone-900 border border-stone-700 rounded-xl
-                             text-stone-400 hover:border-stone-500 hover:text-stone-200 transition-colors">
-                  {label}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-stone-700 text-center">Pass: Demo1234!</p>
+          {/* El vecino no necesita cuenta */}
+          <div className="rounded-2xl border border-stone-800 bg-stone-900/60 px-4 py-3 text-center space-y-2">
+            <p className="text-sm text-stone-300">¿Sos vecino? No necesitás cuenta.</p>
+            <Link href="/reportar" className="inline-flex items-center gap-1.5 text-sm font-medium text-green-400 hover:text-green-300">
+              <Camera className="w-4 h-4" /> Reportar un problema
+            </Link>
           </div>
         </motion.div>
       </div>

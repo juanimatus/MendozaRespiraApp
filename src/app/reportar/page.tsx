@@ -187,6 +187,9 @@ export default function ReportarPage() {
           <p className="text-stone-400 text-sm max-w-xs">
             Tu reporte ya es parte del mapa ciudadano. Gracias por contribuir.
           </p>
+          <p className="text-stone-500 text-xs max-w-xs">
+            No necesitás cuenta para seguirlo: lo encontrás en «Mis reportes» desde este teléfono.
+          </p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 6 }}
@@ -194,7 +197,12 @@ export default function ReportarPage() {
           transition={{ duration: 0.2, delay: 0.14, ease: EASE }}
           className="flex flex-col gap-3 w-full max-w-xs"
         >
-          <button onClick={() => router.push('/feed')} className="btn-primary">
+          {newReportId ? (
+            <button onClick={() => router.push(`/caso/${newReportId}`)} className="btn-primary">
+              Seguir mi caso
+            </button>
+          ) : null}
+          <button onClick={() => router.push('/feed')} className={newReportId ? 'btn-secondary' : 'btn-primary'}>
             Ver en el mapa
           </button>
           <button onClick={() => { setStep('form'); setPhoto(null); setPreview(null); setLocation(null); setComment(''); setMunicipio(''); setAddress(null); setAnalysis(null); setType(null); }} className="btn-secondary">
