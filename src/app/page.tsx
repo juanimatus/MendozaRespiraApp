@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
-import { TreeDeciduous, Map, Camera, Sparkles, Users, LogIn, BarChart3 } from 'lucide-react';
+import { TreeDeciduous, Map, Camera, Sparkles, Users, BarChart3, ListChecks } from 'lucide-react';
 import { useAuth, ROLE_LABELS, ROLE_BADGE } from '@/lib/auth-context';
 import { fetchMunicipioStats } from '@/lib/explorer';
 import { REGION } from '@/config/region';
@@ -47,15 +47,16 @@ export default function Home() {
             </div>
             <span className="font-semibold text-stone-100 tracking-tight">Mendoza Respira</span>
           </div>
-          {!loading && (user && profile ? (
+          {/* El vecino no inicia sesión: solo se ve el rol si entró alguien del equipo técnico */}
+          {!loading && user && profile && role !== 'ciudadano' ? (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-800 text-xs font-medium text-stone-200">
               {ROLE_BADGE[role]} {ROLE_LABELS[role]}
             </span>
           ) : (
-            <Link href="/login" className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-green-400 transition-colors">
-              <LogIn className="w-4 h-4" /> Ingresar
+            <Link href="/mis-reportes" className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-green-400 transition-colors">
+              <ListChecks className="w-4 h-4" /> Mis reportes
             </Link>
-          ))}
+          )}
         </div>
 
         {/* Propuesta */}

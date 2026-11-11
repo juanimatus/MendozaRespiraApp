@@ -25,6 +25,21 @@ export async function fetchReport(id: string): Promise<ReportWithVerifications> 
   return data as ReportWithVerifications;
 }
 
+// ── Reportes de este dispositivo (seguimiento sin cuenta) ─────────────────
+// El vecino no inicia sesión: sus reportes se reconocen por el ID anónimo
+// que guarda el teléfono. Si borra los datos del navegador, los recupera
+// con el enlace del caso (/caso/<id>).
+export async function fetchMyReports(): Promise<ReportWithVerifications[]> {
+  const { data, error } = await supabase
+    .from('reports_with_verifications')
+    .select('*')
+    .eq('reporter_id', getDeviceId())
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data as ReportWithVerifications[];
+}
+
 // ── Crear un reporte ──────────────────────────────────────────────────────
 export interface CreateReportInput {
   lat: number;

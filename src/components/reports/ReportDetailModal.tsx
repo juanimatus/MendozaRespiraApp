@@ -15,6 +15,8 @@ interface Props {
   report: ReportWithVerifications;
   onClose: () => void;
   onVerified: () => void;
+  /** En la página del caso (/caso/[id]) se muestra como tarjeta, sin fondo oscuro */
+  inline?: boolean;
 }
 
 function formatDate(iso: string) {
@@ -89,7 +91,7 @@ function Timeline({ report, count }: { report: ReportWithVerifications; count: n
   );
 }
 
-export default function ReportDetailModal({ report, onClose, onVerified }: Props) {
+export default function ReportDetailModal({ report, onClose, onVerified, inline = false }: Props) {
   const [alreadyVerified, setAlreadyVerified] = useState(false);
   const [verifying, setVerifying]             = useState(false);
   const [count, setCount]                     = useState(report.verification_count);
@@ -127,15 +129,17 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
   const typeColor = REPORT_TYPE_COLORS[report.type];
 
   return (
-    /* Backdrop */
+    /* Backdrop (en la página del caso no hay fondo: la tarjeta va en el flujo) */
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15, ease: EASE }}
-      className="absolute inset-0 z-[1001] flex items-end sm:items-center justify-center
-                 bg-black/60 backdrop-blur-sm p-0 sm:p-4"
-      onClick={onClose}
+      className={inline
+        ? 'flex justify-center'
+        : `absolute inset-0 z-[1001] flex items-end sm:items-center justify-center
+           bg-black/60 backdrop-blur-sm p-0 sm:p-4`}
+      onClick={inline ? undefined : onClose}
     >
       {/* Sheet / Card */}
       <motion.div
@@ -143,8 +147,10 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 16, scale: 0.98 }}
         transition={{ duration: 0.2, ease: EASE }}
-        className="w-full sm:max-w-sm max-h-[92dvh] overflow-y-auto bg-stone-950 border border-stone-800
-                   rounded-t-3xl sm:rounded-2xl shadow-2xl"
+        className={inline
+          ? 'w-full max-w-sm bg-stone-950 border border-stone-800 rounded-2xl overflow-hidden'
+          : `w-full sm:max-w-sm max-h-[92dvh] overflow-y-auto bg-stone-950 border border-stone-800
+             rounded-t-3xl sm:rounded-2xl shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Foto */}
@@ -158,6 +164,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
           />
 
           {/* Cerrar */}
+          {!inline && (
           <motion.button
             onClick={onClose}
             whileTap={{ scale: 0.92 }}
@@ -166,6 +173,7 @@ export default function ReportDetailModal({ report, onClose, onVerified }: Props
           >
             <X className="w-4 h-4" />
           </motion.button>
+          )}
 
           {/* Badge de estado */}
           <span
