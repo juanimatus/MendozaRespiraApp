@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { DEMO_COOKIE, isValidDemoCookie } from '@/lib/demo/access';
 
 // Rutas que requieren rol municipal
 const MUNICIPAL_ROUTES = ['/dashboard', '/inventario', '/reclamos', '/inspector', '/revision'];
@@ -7,6 +8,21 @@ const MUNICIPAL_ROUTES = ['/dashboard', '/inventario', '/reclamos', '/inspector'
 const ADMIN_ROUTES = ['/dashboard'];
 
 export async function middleware(request: NextRequest) {
+  // Demo privado para distribuidoras: se entra con la contraseña de demo,
+  // no con la cuenta de Supabase, y nunca se indexa en buscadores
+  const path = request.nextUrl.pathname;
+  if (path === '/demo' || path.startsWith('/demo/')) {
+    const isLogin = path === '/demo/ingresar';
+    const ok = await isValidDemoCookie(request.cookies.get(DEMO_COOKIE)?.value);
+    const res = !ok && !isLogin
+      ? NextResponse.redirect(new URL('/demo/ingresar', request.url))
+      : ok && isLogin
+        ? NextResponse.redirect(new URL('/demo', request.url))
+        : NextResponse.next();
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return res;
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

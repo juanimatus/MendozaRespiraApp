@@ -10,6 +10,7 @@ import { REGION } from '@/config/region';
 import type { MunicipioStats } from '@/lib/explorer';
 import type { ReportWithVerifications } from '@/types';
 import { CHORO_STEPS, unitColor, type Metric } from './metrics';
+import { BASEMAPS, DEFAULT_BASEMAP, type Basemap } from './basemaps';
 import { REPORT_TYPE_COLORS, REPORT_TYPE_LABELS } from '@/types';
 
 function colorFor(value: number, max: number) {
@@ -29,26 +30,6 @@ interface Props {
 }
 
 type UnitFeature = Feature<Geometry, { nombre: string }>;
-
-// Mapas base sin API key ni marca de agua (Esri). Se elige con
-// NEXT_PUBLIC_MAP_BASE=oscuro|satelite; el usuario puede alternar en el mapa.
-const BASEMAPS = {
-  oscuro: {
-    label: 'Mapa',
-    url:   'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-    labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-    maxNativeZoom: 16,
-  },
-  satelite: {
-    label: 'Satélite',
-    url:   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-    maxNativeZoom: 18,
-  },
-} as const;
-type Basemap = keyof typeof BASEMAPS;
-const DEFAULT_BASEMAP: Basemap =
-  process.env.NEXT_PUBLIC_MAP_BASE === 'satelite' ? 'satelite' : 'oscuro';
 
 function Toggle<T extends string>({ value, options, onChange }: {
   value: T; options: [T, string][]; onChange: (v: T) => void;
